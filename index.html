@@ -88,14 +88,13 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="操作容器"><a href="#操作容器" class="headerlink" title="#操作容器"></a>#操作容器</h2><p>###启动容器</p>
-<p>启动容器并启动bash（交互方式）:</p>
+        <h1 id="操作容器"><a href="#操作容器" class="headerlink" title="操作容器"></a>操作容器</h1><hr>
+<h3 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h3><p>启动容器并启动bash（交互方式）:</p>
 <pre><code>$docker run -i -t &lt;image_name/continar_id&gt; /bin/bash
 </code></pre><p>启动容器以后台方式运行(更通用的方式）：</p>
 <pre><code>$docker run -d -it  image_name
 </code></pre><p>ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0<br>附着到容器</p>
-<p>###附着到正在运行的容器</p>
-<pre><code>docker attach &lt;id、container_name&gt;
+<h3 id="附着到正在运行的容器"><a href="#附着到正在运行的容器" class="headerlink" title="附着到正在运行的容器"></a>附着到正在运行的容器</h3><pre><code>docker attach &lt;id、container_name&gt;
 </code></pre><p>进入正在运行的容器内部，同时运行bash(比attach更好用)</p>
 <pre><code>docker exec -t -i &lt;id/container_name&gt;  /bin/bash
 </code></pre><p>ps：docker exec是如此的有用，以至于我们通常是将其封装为一个脚本，放到全局可调用的地方，比如，可以写成一个indocker.sh：</p>
@@ -108,12 +107,10 @@ CONTAINER ID        IMAGE
 9cf7b563f689        hello.demo.kdemo:v160525.202747
 
 $./indocker.sh 9cf7b563f689 
-</code></pre><p>###查看容器日志</p>
-<pre><code>docker logs &lt;id/container_name&gt;
+</code></pre><h3 id="查看容器日志"><a href="#查看容器日志" class="headerlink" title="查看容器日志"></a>查看容器日志</h3><pre><code>docker logs &lt;id/container_name&gt;
 </code></pre><p>实时查看日志输出</p>
 <pre><code>docker logs -f &lt;id/container_name&gt; (类似 tail -f) (带上时间戳-t）
-</code></pre><p>###查看容器</p>
-<p>列出当前所有正在运行的container</p>
+</code></pre><h3 id="查看容器"><a href="#查看容器" class="headerlink" title="查看容器"></a>查看容器</h3><p>列出当前所有正在运行的container</p>
 <pre><code>$docker ps
 </code></pre><p>用一行列出所有正在运行的container（容器多的时候非常清晰）</p>
 <pre><code>$docker ps | less -S
@@ -147,41 +144,32 @@ Note： image相当于类，container相当于实例，不过可以动态给实�
 $docker start Name/ID  
 $docker kill Name/ID  
 $docker restart name/ID
-</code></pre><h2 id="操作Image"><a href="#操作Image" class="headerlink" title="#操作Image"></a>#操作Image</h2><p>###列出镜像</p>
-<pre><code>$sudo docker images
+</code></pre><h1 id="操作Image"><a href="#操作Image" class="headerlink" title="操作Image"></a>操作Image</h1><hr>
+<h3 id="列出镜像"><a href="#列出镜像" class="headerlink" title="列出镜像"></a>列出镜像</h3><pre><code>$sudo docker images
 
 -a, –all=false Show all images; –no-trunc=false Don’t truncate output; -q, –quiet=false Only show numeric IDs
-</code></pre><p>###从dockerhub检索image</p>
-<pre><code>$docker search image_name
-</code></pre><p>###下载image</p>
-<pre><code>$docker pull image_name
-</code></pre><p>###删除一个或者多个镜像;</p>
-<pre><code>$docker rmi image_name  
+</code></pre><h3 id="从dockerhub检索image"><a href="#从dockerhub检索image" class="headerlink" title="从dockerhub检索image"></a>从dockerhub检索image</h3><pre><code>$docker search image_name
+</code></pre><h3 id="下载image"><a href="#下载image" class="headerlink" title="下载image"></a>下载image</h3><pre><code>$docker pull image_name
+</code></pre><h3 id="删除一个或者多个镜像"><a href="#删除一个或者多个镜像" class="headerlink" title="删除一个或者多个镜像;"></a>删除一个或者多个镜像;</h3><pre><code>$docker rmi image_name  
 
 -f, –force=false Force; –no-prune=false Do not delete untagged parents
-</code></pre><p>###显示一个镜像的历史;</p>
-<pre><code>$docker history image_name
-</code></pre><p>###发布docker镜像</p>
-<pre><code>$docker push new_image_name
+</code></pre><h3 id="显示一个镜像的历史"><a href="#显示一个镜像的历史" class="headerlink" title="显示一个镜像的历史;"></a>显示一个镜像的历史;</h3><pre><code>$docker history image_name
+</code></pre><h3 id="发布docker镜像"><a href="#发布docker镜像" class="headerlink" title="发布docker镜像"></a>发布docker镜像</h3><pre><code>$docker push new_image_name
 </code></pre><p>ps:要发布到私有Registry中的镜像，在镜像命名中需要带上Registry的域名（如果非80端口，同时需要带上端口号）比如：</p>
 <p>$docker push dockerhub.yourdomain.com:443/hello.demo.kdemo:v1.0</p>
-<p>###拉取docker镜像</p>
-<pre><code>$docker pull image_name
-</code></pre><h2 id="网络操作"><a href="#网络操作" class="headerlink" title="#网络操作"></a>#网络操作</h2><p>###查看docker0的网络(宿主机上操作)</p>
-<pre><code>$ip a show docker0
-</code></pre><p>###查看容器的IP地址</p>
-<pre><code>$docker inspect -f &apos;{{ .NetworkSettings.IPAddress }}&apos; &lt;id、container_name&gt;
-</code></pre><p>###附着到容器内部查看其内部ip：</p>
-<pre><code>$ip a show eth0
-</code></pre><h2 id="查看docker基础信息"><a href="#查看docker基础信息" class="headerlink" title="#查看docker基础信息"></a>#查看docker基础信息</h2><p>###查看docker版本</p>
-<pre><code>$docker version
-</code></pre><p>###查看docker系统的信息</p>
-<pre><code>$docker info
+<h3 id="拉取docker镜像"><a href="#拉取docker镜像" class="headerlink" title="拉取docker镜像"></a>拉取docker镜像</h3><pre><code>$docker pull image_name
+</code></pre><h1 id="网络操作"><a href="#网络操作" class="headerlink" title="网络操作"></a>网络操作</h1><hr>
+<h3 id="查看docker0的网络-宿主机上操作"><a href="#查看docker0的网络-宿主机上操作" class="headerlink" title="查看docker0的网络(宿主机上操作)"></a>查看docker0的网络(宿主机上操作)</h3><pre><code>$ip a show docker0
+</code></pre><h3 id="查看容器的IP地址"><a href="#查看容器的IP地址" class="headerlink" title="查看容器的IP地址"></a>查看容器的IP地址</h3><pre><code>$docker inspect -f &apos;{{ .NetworkSettings.IPAddress }}&apos; &lt;id、container_name&gt;
+</code></pre><h3 id="附着到容器内部查看其内部ip："><a href="#附着到容器内部查看其内部ip：" class="headerlink" title="附着到容器内部查看其内部ip："></a>附着到容器内部查看其内部ip：</h3><pre><code>$ip a show eth0
+</code></pre><h1 id="查看docker基础信息"><a href="#查看docker基础信息" class="headerlink" title="查看docker基础信息"></a>查看docker基础信息</h1><hr>
+<h3 id="查看docker版本"><a href="#查看docker版本" class="headerlink" title="查看docker版本"></a>查看docker版本</h3><pre><code>$docker version
+</code></pre><h3 id="查看docker系统的信息"><a href="#查看docker系统的信息" class="headerlink" title="查看docker系统的信息"></a>查看docker系统的信息</h3><pre><code>$docker info
 </code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/My-New-Post/" data-id="cjgxbxc3y0001c8l7ff9qwjip" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/My-New-Post/" data-id="cjgxc3u4e0000pcl76ny0i3x6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li></ul>
@@ -232,7 +220,7 @@ $docker restart name/ID
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/hello-world/" data-id="cjgxbxc3q0000c8l7wbvpy0ei" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/hello-world/" data-id="cjgxc3u4l0001pcl7riynklsr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/aaa/">aaa</a></li></ul>
