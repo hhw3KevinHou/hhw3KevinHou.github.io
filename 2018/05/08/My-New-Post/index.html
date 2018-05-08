@@ -5,17 +5,20 @@
   
 
   
-  <title>My New Post | Hexo</title>
+  <title>Docker | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="keywords" content="bbb">
+  <meta name="description" content="#操作容器###启动容器 启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 ###附着">
+<meta name="keywords" content="Docker">
 <meta property="og:type" content="article">
-<meta property="og:title" content="My New Post">
+<meta property="og:title" content="Docker">
 <meta property="og:url" content="http://yoursite.com/2018/05/08/My-New-Post/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="#操作容器###启动容器 启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 ###附着">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-05-08T05:50:46.577Z">
+<meta property="og:updated_time" content="2018-05-08T07:02:42.074Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="My New Post">
+<meta name="twitter:title" content="Docker">
+<meta name="twitter:description" content="#操作容器###启动容器 启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 ###附着">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -69,7 +72,7 @@
 </a>
     
   <div class="article-category">
-    <a class="article-category-link" href="/categories/111/">111</a>
+    <a class="article-category-link" href="/categories/Docker/">Docker</a>
   </div>
 
   </div>
@@ -80,7 +83,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      My New Post
+      Docker
     </h1>
   
 
@@ -88,14 +91,103 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h2 id="操作容器"><a href="#操作容器" class="headerlink" title="#操作容器"></a>#操作容器</h2><p>###启动容器</p>
+<p>启动容器并启动bash（交互方式）:</p>
+<pre><code>$docker run -i -t &lt;image_name/continar_id&gt; /bin/bash
+</code></pre><p>启动容器以后台方式运行(更通用的方式）：</p>
+<pre><code>$docker run -d -it  image_name
+</code></pre><p>ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0<br>附着到容器</p>
+<p>###附着到正在运行的容器</p>
+<pre><code>docker attach &lt;id、container_name&gt;
+</code></pre><p>进入正在运行的容器内部，同时运行bash(比attach更好用)</p>
+<pre><code>docker exec -t -i &lt;id/container_name&gt;  /bin/bash
+</code></pre><p>ps：docker exec是如此的有用，以至于我们通常是将其封装为一个脚本，放到全局可调用的地方，比如，可以写成一个indocker.sh：</p>
+<pre><code>$cat indocker.sh 
+docker exec -t -i $1 /bin/bash
+
+# 查看需要附着的容器id
+$docker ps | less -S
+CONTAINER ID        IMAGE                                                 
+9cf7b563f689        hello.demo.kdemo:v160525.202747
+
+$./indocker.sh 9cf7b563f689 
+</code></pre><p>###查看容器日志</p>
+<pre><code>docker logs &lt;id/container_name&gt;
+</code></pre><p>实时查看日志输出</p>
+<pre><code>docker logs -f &lt;id/container_name&gt; (类似 tail -f) (带上时间戳-t）
+</code></pre><p>###查看容器</p>
+<p>列出当前所有正在运行的container</p>
+<pre><code>$docker ps
+</code></pre><p>用一行列出所有正在运行的container（容器多的时候非常清晰）</p>
+<pre><code>$docker ps | less -S
+</code></pre><p>列出所有的container</p>
+<pre><code>$docker ps -a  
+</code></pre><p>列出最近一次启动的container</p>
+<pre><code>$docker ps -l 
+</code></pre><p>显示一个运行的容器里面的进程信息</p>
+<pre><code>$docker top Name/ID  
+</code></pre><p>查看容器内部详情细节：</p>
+<pre><code>$docker inspect &lt;id/container_name&gt;
+</code></pre><p>在容器中安装新的程序</p>
+<pre><code>$docker run image_name apt-get install -y app_name  
+
+Note： 在执行apt-get 命令的时候，要带上-y参数。如果不指定-y参数的话，apt-get命令会进入交互模式，需要用户输入命令来进行确认，但在docker环境中是无法响应这种交互的。apt-get 命令执行完毕之后，容器就会停止，但对容器的改动不会丢失。
+</code></pre><p>从容器里面拷贝文件/目录到本地一个路径</p>
+<pre><code>$docker cp Name:/container_path to_path  
+$docker cp ID:/container_path to_path
+</code></pre><p>保存对容器的修改（commit） 当你对某一个容器做了修改之后（通过在容器中运行某一个命令），可以把对容器的修改保存下来，这样下次可以从保存后的最新状态运行该容器。</p>
+<pre><code>$docker commit ID new_image_name  
+
+Note： image相当于类，container相当于实例，不过可以动态给实例安装新软件，然后把这个container用commit命令固化成一个image。
+</code></pre><p>删除单个容器</p>
+<pre><code>$docker rm Name/ID 
+
+-f, –force=false; -l, –link=false Remove the specified link and not the underlying container; -v, –volumes=false Remove the volumes associated to the container
+</code></pre><p>删除所有容器</p>
+<pre><code>$docker rm `docker ps -a -q`  
+</code></pre><p>停止、启动、杀死、重启一个容器</p>
+<pre><code>$docker stop Name/ID  
+$docker start Name/ID  
+$docker kill Name/ID  
+$docker restart name/ID
+</code></pre><h2 id="操作Image"><a href="#操作Image" class="headerlink" title="#操作Image"></a>#操作Image</h2><p>###列出镜像</p>
+<pre><code>$sudo docker images
+
+-a, –all=false Show all images; –no-trunc=false Don’t truncate output; -q, –quiet=false Only show numeric IDs
+</code></pre><p>###从dockerhub检索image</p>
+<pre><code>$docker search image_name
+</code></pre><p>###下载image</p>
+<pre><code>$docker pull image_name
+</code></pre><p>###删除一个或者多个镜像;</p>
+<pre><code>$docker rmi image_name  
+
+-f, –force=false Force; –no-prune=false Do not delete untagged parents
+</code></pre><p>###显示一个镜像的历史;</p>
+<pre><code>$docker history image_name
+</code></pre><p>###发布docker镜像</p>
+<pre><code>$docker push new_image_name
+</code></pre><p>ps:要发布到私有Registry中的镜像，在镜像命名中需要带上Registry的域名（如果非80端口，同时需要带上端口号）比如：</p>
+<p>$docker push dockerhub.yourdomain.com:443/hello.demo.kdemo:v1.0</p>
+<p>###拉取docker镜像</p>
+<pre><code>$docker pull image_name
+</code></pre><h2 id="网络操作"><a href="#网络操作" class="headerlink" title="#网络操作"></a>#网络操作</h2><p>###查看docker0的网络(宿主机上操作)</p>
+<pre><code>$ip a show docker0
+</code></pre><p>###查看容器的IP地址</p>
+<pre><code>$docker inspect -f &apos;{{ .NetworkSettings.IPAddress }}&apos; &lt;id、container_name&gt;
+</code></pre><p>###附着到容器内部查看其内部ip：</p>
+<pre><code>$ip a show eth0
+</code></pre><h2 id="查看docker基础信息"><a href="#查看docker基础信息" class="headerlink" title="#查看docker基础信息"></a>#查看docker基础信息</h2><p>###查看docker版本</p>
+<pre><code>$docker version
+</code></pre><p>###查看docker系统的信息</p>
+<pre><code>$docker info
+</code></pre>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/My-New-Post/" data-id="cjgx9b3ed0000vkl7fis3wew2" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/My-New-Post/" data-id="cjgxbxc3y0001c8l7ff9qwjip" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/bbb/">bbb</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li></ul>
 
     </footer>
   </div>
@@ -122,7 +214,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/111/">111</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/222/">222</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/222/">222</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li></ul>
     </div>
   </div>
 
@@ -132,7 +224,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/aaa/">aaa</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bbb/">bbb</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/aaa/">aaa</a></li></ul>
     </div>
   </div>
 
@@ -142,7 +234,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/aaa/" style="font-size: 10px;">aaa</a> <a href="/tags/bbb/" style="font-size: 10px;">bbb</a>
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/aaa/" style="font-size: 10px;">aaa</a>
     </div>
   </div>
 
@@ -164,7 +256,7 @@
       <ul>
         
           <li>
-            <a href="/2018/05/08/My-New-Post/">My New Post</a>
+            <a href="/2018/05/08/My-New-Post/">Docker</a>
           </li>
         
           <li>
