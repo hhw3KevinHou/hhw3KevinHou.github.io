@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Docker | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+<meta name="keywords" content="Docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker">
+<meta property="og:url" content="http://yoursite.com/2018/05/08/docker/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-05-08T07:11:06.769Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Docker">
+<meta name="twitter:description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-docker" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/08/docker/" class="article-date">
+  <time datetime="2018-05-08T04:52:08.000Z" itemprop="datePublished">2018-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Docker/">Docker</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Docker
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="操作容器"><a href="#操作容器" class="headerlink" title="操作容器"></a>操作容器</h1><hr>
+<h3 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h3><p>启动容器并启动bash（交互方式）:</p>
+<pre><code>$docker run -i -t &lt;image_name/continar_id&gt; /bin/bash
+</code></pre><p>启动容器以后台方式运行(更通用的方式）：</p>
+<pre><code>$docker run -d -it  image_name
+</code></pre><p>ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0<br>附着到容器</p>
+<h3 id="附着到正在运行的容器"><a href="#附着到正在运行的容器" class="headerlink" title="附着到正在运行的容器"></a>附着到正在运行的容器</h3><pre><code>docker attach &lt;id、container_name&gt;
+</code></pre><p>进入正在运行的容器内部，同时运行bash(比attach更好用)</p>
+<pre><code>docker exec -t -i &lt;id/container_name&gt;  /bin/bash
+</code></pre><p>ps：docker exec是如此的有用，以至于我们通常是将其封装为一个脚本，放到全局可调用的地方，比如，可以写成一个indocker.sh：</p>
+<pre><code>$cat indocker.sh 
+docker exec -t -i $1 /bin/bash
+
+# 查看需要附着的容器id
+$docker ps | less -S
+CONTAINER ID        IMAGE                                                 
+9cf7b563f689        hello.demo.kdemo:v160525.202747
+
+$./indocker.sh 9cf7b563f689 
+</code></pre><h3 id="查看容器日志"><a href="#查看容器日志" class="headerlink" title="查看容器日志"></a>查看容器日志</h3><pre><code>docker logs &lt;id/container_name&gt;
+</code></pre><p>实时查看日志输出</p>
+<pre><code>docker logs -f &lt;id/container_name&gt; (类似 tail -f) (带上时间戳-t）
+</code></pre><h3 id="查看容器"><a href="#查看容器" class="headerlink" title="查看容器"></a>查看容器</h3><p>列出当前所有正在运行的container</p>
+<pre><code>$docker ps
+</code></pre><p>用一行列出所有正在运行的container（容器多的时候非常清晰）</p>
+<pre><code>$docker ps | less -S
+</code></pre><p>列出所有的container</p>
+<pre><code>$docker ps -a  
+</code></pre><p>列出最近一次启动的container</p>
+<pre><code>$docker ps -l 
+</code></pre><p>显示一个运行的容器里面的进程信息</p>
+<pre><code>$docker top Name/ID  
+</code></pre><p>查看容器内部详情细节：</p>
+<pre><code>$docker inspect &lt;id/container_name&gt;
+</code></pre><p>在容器中安装新的程序</p>
+<pre><code>$docker run image_name apt-get install -y app_name  
+
+Note： 在执行apt-get 命令的时候，要带上-y参数。如果不指定-y参数的话，apt-get命令会进入交互模式，需要用户输入命令来进行确认，但在docker环境中是无法响应这种交互的。apt-get 命令执行完毕之后，容器就会停止，但对容器的改动不会丢失。
+</code></pre><p>从容器里面拷贝文件/目录到本地一个路径</p>
+<pre><code>$docker cp Name:/container_path to_path  
+$docker cp ID:/container_path to_path
+</code></pre><p>保存对容器的修改（commit） 当你对某一个容器做了修改之后（通过在容器中运行某一个命令），可以把对容器的修改保存下来，这样下次可以从保存后的最新状态运行该容器。</p>
+<pre><code>$docker commit ID new_image_name  
+
+Note： image相当于类，container相当于实例，不过可以动态给实例安装新软件，然后把这个container用commit命令固化成一个image。
+</code></pre><p>删除单个容器</p>
+<pre><code>$docker rm Name/ID 
+
+-f, –force=false; -l, –link=false Remove the specified link and not the underlying container; -v, –volumes=false Remove the volumes associated to the container
+</code></pre><p>删除所有容器</p>
+<pre><code>$docker rm `docker ps -a -q`  
+</code></pre><p>停止、启动、杀死、重启一个容器</p>
+<pre><code>$docker stop Name/ID  
+$docker start Name/ID  
+$docker kill Name/ID  
+$docker restart name/ID
+</code></pre><h1 id="操作Image"><a href="#操作Image" class="headerlink" title="操作Image"></a>操作Image</h1><hr>
+<h3 id="列出镜像"><a href="#列出镜像" class="headerlink" title="列出镜像"></a>列出镜像</h3><pre><code>$sudo docker images
+
+-a, –all=false Show all images; –no-trunc=false Don’t truncate output; -q, –quiet=false Only show numeric IDs
+</code></pre><h3 id="从dockerhub检索image"><a href="#从dockerhub检索image" class="headerlink" title="从dockerhub检索image"></a>从dockerhub检索image</h3><pre><code>$docker search image_name
+</code></pre><h3 id="下载image"><a href="#下载image" class="headerlink" title="下载image"></a>下载image</h3><pre><code>$docker pull image_name
+</code></pre><h3 id="删除一个或者多个镜像"><a href="#删除一个或者多个镜像" class="headerlink" title="删除一个或者多个镜像;"></a>删除一个或者多个镜像;</h3><pre><code>$docker rmi image_name  
+
+-f, –force=false Force; –no-prune=false Do not delete untagged parents
+</code></pre><h3 id="显示一个镜像的历史"><a href="#显示一个镜像的历史" class="headerlink" title="显示一个镜像的历史;"></a>显示一个镜像的历史;</h3><pre><code>$docker history image_name
+</code></pre><h3 id="发布docker镜像"><a href="#发布docker镜像" class="headerlink" title="发布docker镜像"></a>发布docker镜像</h3><pre><code>$docker push new_image_name
+</code></pre><p>ps:要发布到私有Registry中的镜像，在镜像命名中需要带上Registry的域名（如果非80端口，同时需要带上端口号）比如：</p>
+<p>$docker push dockerhub.yourdomain.com:443/hello.demo.kdemo:v1.0</p>
+<h3 id="拉取docker镜像"><a href="#拉取docker镜像" class="headerlink" title="拉取docker镜像"></a>拉取docker镜像</h3><pre><code>$docker pull image_name
+</code></pre><h1 id="网络操作"><a href="#网络操作" class="headerlink" title="网络操作"></a>网络操作</h1><hr>
+<h3 id="查看docker0的网络-宿主机上操作"><a href="#查看docker0的网络-宿主机上操作" class="headerlink" title="查看docker0的网络(宿主机上操作)"></a>查看docker0的网络(宿主机上操作)</h3><pre><code>$ip a show docker0
+</code></pre><h3 id="查看容器的IP地址"><a href="#查看容器的IP地址" class="headerlink" title="查看容器的IP地址"></a>查看容器的IP地址</h3><pre><code>$docker inspect -f &apos;{{ .NetworkSettings.IPAddress }}&apos; &lt;id、container_name&gt;
+</code></pre><h3 id="附着到容器内部查看其内部ip："><a href="#附着到容器内部查看其内部ip：" class="headerlink" title="附着到容器内部查看其内部ip："></a>附着到容器内部查看其内部ip：</h3><pre><code>$ip a show eth0
+</code></pre><h1 id="查看docker基础信息"><a href="#查看docker基础信息" class="headerlink" title="查看docker基础信息"></a>查看docker基础信息</h1><hr>
+<h3 id="查看docker版本"><a href="#查看docker版本" class="headerlink" title="查看docker版本"></a>查看docker版本</h3><pre><code>$docker version
+</code></pre><h3 id="查看docker系统的信息"><a href="#查看docker系统的信息" class="headerlink" title="查看docker系统的信息"></a>查看docker系统的信息</h3><pre><code>$docker info
+</code></pre>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/08/docker/" data-id="cjh7a1ee700076ol7axty8fvr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/05/10/springCloud/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Spring Cloud
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/05/08/hello-world/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Hello World</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/222/">222</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/aaa/">aaa</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/aaa/" style="font-size: 10px;">aaa</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/05/15/transction/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/10/springCloud/">Spring Cloud</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/08/docker/">Docker</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/08/hello-world/">Hello World</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
