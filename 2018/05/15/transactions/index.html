@@ -5,22 +5,23 @@
   
 
   
-  <title>Hexo</title>
+  <title>可靠消息最终一致性 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="消息发送一致性：是指产生消息的业务动作与消息发送的一致。也就是说，如果业务操作成功，那么由这个业务操作所产生的消息一定要成功投递出去(一般是发送到kafka、rocketmq、rabbitmq等消息中间件中)，否则就丢消息。 柔性事务、可靠消息最终一致性、异步确保性  下面用伪代码进行演示消息发送和投递的不可靠性： 1、先进行数据库操作，再发送消息 public void test1(){ //1">
+<meta name="keywords" content="事务">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hexo">
-<meta property="og:url" content="http://yoursite.com/2018/05/15/transction/index.html">
+<meta property="og:title" content="可靠消息最终一致性">
+<meta property="og:url" content="http://yoursite.com/2018/05/15/transactions/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="消息发送一致性：是指产生消息的业务动作与消息发送的一致。也就是说，如果业务操作成功，那么由这个业务操作所产生的消息一定要成功投递出去(一般是发送到kafka、rocketmq、rabbitmq等消息中间件中)，否则就丢消息。 柔性事务、可靠消息最终一致性、异步确保性  下面用伪代码进行演示消息发送和投递的不可靠性： 1、先进行数据库操作，再发送消息 public void test1(){ //1">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="http://yoursite.com/2018/05/15/transction/assets/1517928467227006042.png">
-<meta property="og:image" content="http://yoursite.com/2018/05/15/transction/assets/1517928501647001515.png">
-<meta property="og:updated_time" content="2018-05-15T06:07:20.467Z">
+<meta property="og:image" content="http://yoursite.com/2018/05/15/transactions/1517928467227006042.png">
+<meta property="og:image" content="http://yoursite.com/2018/05/15/transactions/1517928501647001515.png">
+<meta property="og:updated_time" content="2018-05-15T06:27:57.415Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hexo">
+<meta name="twitter:title" content="可靠消息最终一致性">
 <meta name="twitter:description" content="消息发送一致性：是指产生消息的业务动作与消息发送的一致。也就是说，如果业务操作成功，那么由这个业务操作所产生的消息一定要成功投递出去(一般是发送到kafka、rocketmq、rabbitmq等消息中间件中)，否则就丢消息。 柔性事务、可靠消息最终一致性、异步确保性  下面用伪代码进行演示消息发送和投递的不可靠性： 1、先进行数据库操作，再发送消息 public void test1(){ //1">
-<meta name="twitter:image" content="http://yoursite.com/2018/05/15/transction/assets/1517928467227006042.png">
+<meta name="twitter:image" content="http://yoursite.com/2018/05/15/transactions/1517928467227006042.png">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -67,21 +68,31 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-transction" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-transactions" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2018/05/15/transction/" class="article-date">
-  <time datetime="2018-05-15T05:30:42.712Z" itemprop="datePublished">2018-05-15</time>
+    <a href="/2018/05/15/transactions/" class="article-date">
+  <time datetime="2018-05-15T06:26:09.000Z" itemprop="datePublished">2018-05-15</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      可靠消息最终一致性
+    </h1>
+  
+
+      </header>
+    
     <div class="article-entry" itemprop="articleBody">
       
         <p>消息发送一致性：是指产生消息的业务动作与消息发送的一致。也就是说，如果业务操作成功，那么由这个业务操作所产生的消息一定要成功投递出去(一般是发送到kafka、rocketmq、rabbitmq等消息中间件中)，否则就丢消息。</p>
-<pre><code>柔性事务、可靠消息最终一致性、异步确保性
-</code></pre><p> 下面用伪代码进行演示消息发送和投递的不可靠性：</p>
+<p>柔性事务、可靠消息最终一致性、异步确保性</p>
+<p> 下面用伪代码进行演示消息发送和投递的不可靠性：</p>
 <p>1、先进行数据库操作，再发送消息</p>
 <pre><code>public void test1(){
 //1 数据库操作
@@ -116,7 +127,7 @@ public void test1(){
 <p>DB作为RM，一般都是支持两阶段提交的。不过，一些MQ中间件并不支持，所以你要找到支持两阶段提交的MQ中间件。另外，JtaTransactionManager只是一个代理，你需要提供一个真实的事务管理器(TM)实现。如前面提到了atomikos公司，就有这样的产品。</p>
 <p>但是笔者依然不建议，这样玩。因为XA两阶段提交性能低，我们使用消息中间件就是为了异步解耦，这种情况，虽然保证了一致性，但是响应时间却大大增加，系统可用性降低。</p>
 <p>那么如何保证，数据库操作和消息发送的一致性呢？</p>
-<p>两种方案：一种是基于MQ的事务消息，以下展示了RocketMQ的事务消息机制。<br><img src="assets/1517928467227006042.png" alt=""></p>
+<p>两种方案：一种是基于MQ的事务消息，以下展示了RocketMQ的事务消息机制。<br><img src="/2018/05/15/transactions/1517928467227006042.png" alt=""></p>
 <p>事务消息的逻辑，由发送端 Producer进行保证(消费端无需考虑)</p>
 <p>首先，发送一个事务消息，这个时候，RocketMQ将消息状态标记为Prepared，注意此时这条消息消费者是无法消费到的。</p>
 <p>接着，执行业务代码逻辑，可能是一个本地数据库事务操作</p>
@@ -124,7 +135,7 @@ public void test1(){
 <p>如果确认消息发送失败了怎么办？RocketMQ会定期扫描消息集群中的事务消息，如果发现了Prepared消息，它会向消息发送端(生产者)确认。RocketMQ会根据发送端设置的策略来决定是回滚还是继续发送确认消息。这样就保证了消息发送与本地事务同时成功或同时失败。</p>
 <p>如果消费失败怎么办？阿里提供给我们的解决方法是：人工解决。</p>
 <p>另外一种实现，并不是所有的mq都支持事务消息。也就是消息一旦发送到消息队列中，消费者立马就可以消费到。此时可以使用独立消息服务、或者本地事务表。</p>
-<p><img src="assets/1517928501647001515.png" alt=""></p>
+<p><img src="/2018/05/15/transactions/1517928501647001515.png" alt=""></p>
 <p>可以看到，其实就是将消息先发送到一个我们自己编写的一个”独立消息服务”应用中，刚开始处于prepare状态，业务逻辑处理成功后，确认发送消息，这个时候”独立消息服务”才会真正的把消息发送给消息队列。消费者消费成功后，ack时，除了对消息队列进行ack(图中没有画出)，对于独立消息服务也要进行ack，”独立消息服务”一般是把这条消息删除。而定时扫描prepare状态的消息，向消息发送端(生产者)确认的工作也由独立消息服务来完成。</p>
 <p>对于”本地事务表”，其实和”独立消息服务”的作用类似，只不过”独立消息服务”是需要独立部署的，而”本地事务表”是将”独立消息服务”的功能内嵌到应用中。</p>
 <p><a href="http://www.tianshouzhi.com/api/tutorials/distributed_transaction/389" target="_blank" rel="noopener">http://www.tianshouzhi.com/api/tutorials/distributed_transaction/389</a></p>
@@ -132,9 +143,11 @@ public void test1(){
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/15/transction/" data-id="cjh7afsj90005l0l71ksmscjw" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/15/transactions/" data-id="cjh7aq09m000cewl71maclnua" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事务/">事务</a></li></ul>
+
     </footer>
   </div>
   
@@ -142,9 +155,9 @@ public void test1(){
 <nav id="article-nav">
   
   
-    <a href="/2018/05/10/springCloud/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/2018/05/15/aaaa/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">Spring Cloud</div>
+      <div class="article-nav-title">aaaa</div>
     </a>
   
 </nav>
@@ -170,7 +183,7 @@ public void test1(){
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/aaa/">aaa</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/aaa/">aaa</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
     </div>
   </div>
 
@@ -180,7 +193,7 @@ public void test1(){
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/aaa/" style="font-size: 10px;">aaa</a>
+      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/aaa/" style="font-size: 10px;">aaa</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
     </div>
   </div>
 
@@ -202,7 +215,11 @@ public void test1(){
       <ul>
         
           <li>
-            <a href="/2018/05/15/transction/">(no title)</a>
+            <a href="/2018/05/15/transactions/">可靠消息最终一致性</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/aaaa/">aaaa</a>
           </li>
         
           <li>
