@@ -7,18 +7,18 @@
   
   <title>Spring Cloud | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="bootstrap.yml(bootstrap.properties) &amp;amp; application.yml(application.properties)A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main applicati">
+  <meta name="description" content="PropertySourceA source of name/value property pairs. The underlying source object may be of any type T that encapsulates properties. Examples include Properties objects, Map objects, ServletContext an">
 <meta name="keywords" content="Spring Cloud">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring Cloud">
 <meta property="og:url" content="http://yoursite.com/2018/05/10/springCloud/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="bootstrap.yml(bootstrap.properties) &amp;amp; application.yml(application.properties)A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main applicati">
+<meta property="og:description" content="PropertySourceA source of name/value property pairs. The underlying source object may be of any type T that encapsulates properties. Examples include Properties objects, Map objects, ServletContext an">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-05-11T09:50:25.373Z">
+<meta property="og:updated_time" content="2018-05-22T08:25:27.671Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring Cloud">
-<meta name="twitter:description" content="bootstrap.yml(bootstrap.properties) &amp;amp; application.yml(application.properties)A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main applicati">
+<meta name="twitter:description" content="PropertySourceA source of name/value property pairs. The underlying source object may be of any type T that encapsulates properties. Examples include Properties objects, Map objects, ServletContext an">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -91,7 +91,9 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h2 id="bootstrap-yml-bootstrap-properties-amp-application-yml-application-properties"><a href="#bootstrap-yml-bootstrap-properties-amp-application-yml-application-properties" class="headerlink" title="bootstrap.yml(bootstrap.properties) &amp; application.yml(application.properties)"></a>bootstrap.yml(bootstrap.properties) &amp; application.yml(application.properties)</h2><p>A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main application. Out of the box it is responsible for loading configuration properties from the external sources, and also decrypting properties in the local external configuration files.</p>
+        <h2 id="PropertySource"><a href="#PropertySource" class="headerlink" title="PropertySource"></a>PropertySource</h2><p>A source of name/value property pairs. The underlying source object may be of any type T that encapsulates properties. Examples include Properties objects, Map objects, ServletContext and ServletConfig objects (for access to init parameters). When working with @Configuration classes that the @PropertySource annotation provides a convenient and declarative way of adding property sources to the enclosing Environment.</p>
+<p>The default property source for external configuration added by the bootstrap process is the Config Server, but you can add additional sources by adding beans of type PropertySourceLocator to the bootstrap context (via META-INF/spring.factories). You could use this to insert additional properties from a different server, or from a database, for instance.</p>
+<h2 id="bootstrap-yml-bootstrap-properties-amp-application-yml-application-properties"><a href="#bootstrap-yml-bootstrap-properties-amp-application-yml-application-properties" class="headerlink" title="bootstrap.yml(bootstrap.properties) &amp; application.yml(application.properties)"></a>bootstrap.yml(bootstrap.properties) &amp; application.yml(application.properties)</h2><p>A Spring Cloud application operates by creating a “bootstrap” context, which is a parent context for the main application. Out of the box it is responsible for loading configuration properties from the external sources, and also decrypting properties in the local external configuration files.</p>
 <h5 id="Typically-bootstrap-yml-bootstrap-properties-contains-two-properties"><a href="#Typically-bootstrap-yml-bootstrap-properties-contains-two-properties" class="headerlink" title="Typically bootstrap.yml(bootstrap.properties) contains two properties:"></a>Typically bootstrap.yml(bootstrap.properties) contains two properties:</h5><ul>
 <li>location of the configuration server (spring.cloud.config.uri)</li>
 <li>name of the application (spring.application.name)</li>
@@ -109,7 +111,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/10/springCloud/" data-id="cjh7at8lq0001iol7hmnecg9z" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/10/springCloud/" data-id="cjhrk3po4000108l7sf9rtzak" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li></ul>
@@ -148,7 +150,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
     </div>
   </div>
 
@@ -158,7 +160,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
     </div>
   </div>
 
@@ -168,7 +170,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
+      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
     </div>
   </div>
 
@@ -188,6 +190,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2018/05/29/testsCategry/">Blue-green Deployments, A/B Testing, and Canary Releases</a>
+          </li>
         
           <li>
             <a href="/2018/05/15/transactions/">可靠消息最终一致性</a>

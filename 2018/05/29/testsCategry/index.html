@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Blue-green Deployments, A/B Testing, and Canary Releases | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Blue Green DeploymentsPleaes see Martin Fowler’s link about blue-green deployments. It gives the overall gist. It’s basically a technique for releasing your application in a predictable manner with an">
+<meta name="keywords" content="Blue-green Deployments,A&#x2F;B Testing,Canary Releases">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blue-green Deployments, A&#x2F;B Testing, and Canary Releases">
+<meta property="og:url" content="http://yoursite.com/2018/05/29/testsCategry/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Blue Green DeploymentsPleaes see Martin Fowler’s link about blue-green deployments. It gives the overall gist. It’s basically a technique for releasing your application in a predictable manner with an">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://yoursite.com/2018/05/29/testsCategry/greendeployment.png">
+<meta property="og:image" content="http://yoursite.com/2018/05/29/testsCategry/bluedeployment.png">
+<meta property="og:image" content="http://yoursite.com/2018/05/29/testsCategry/abtesting.png">
+<meta property="og:image" content="http://yoursite.com/2018/05/29/testsCategry/canarydeployment.png">
+<meta property="og:updated_time" content="2018-05-29T10:47:44.833Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Blue-green Deployments, A&#x2F;B Testing, and Canary Releases">
+<meta name="twitter:description" content="Blue Green DeploymentsPleaes see Martin Fowler’s link about blue-green deployments. It gives the overall gist. It’s basically a technique for releasing your application in a predictable manner with an">
+<meta name="twitter:image" content="http://yoursite.com/2018/05/29/testsCategry/greendeployment.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-testsCategry" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/29/testsCategry/" class="article-date">
+  <time datetime="2018-05-29T10:27:26.619Z" itemprop="datePublished">2018-05-29</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/test/">test</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Blue-green Deployments, A/B Testing, and Canary Releases
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Blue-Green-Deployments"><a href="#Blue-Green-Deployments" class="headerlink" title="Blue Green Deployments"></a>Blue Green Deployments</h2><p>Pleaes see Martin Fowler’s link about blue-green deployments. It gives the overall gist. It’s basically a technique for releasing your application in a predictable manner with an goal of reducing any downtime associated with a release. It’s a quick way to prime your app before releasing, and also quickly roll back if you find issues.</p>
+<p>Simply, you have two identical environments (infrastructure) with the “green” environment hosting the current production apps (app1 version1, app2 version1, app3 version1 for example):</p>
+<p><img src="/2018/05/29/testsCategry/greendeployment.png" alt=""></p>
+<p>Now, when you’re ready to make a change to app2 for example and upgrade it to v2, you’d do so in the “blue environment”. In that environment you deploy the new version of the app, run smoke tests, and any other tests (including those to exercise/prime the OS, cache, CPU, etc). When things look good, you change the loadbalancer/reverse proxy/router to point to the blue environment:</p>
+<p><img src="/2018/05/29/testsCategry/bluedeployment.png" alt=""></p>
+<p>You monitor for any failures or exceptions because of the release. If everything looks good, you can eventually shut down the green environment and use it to stage any new releases. If not, you can quickly rollback to the green environment by pointing the loadbalancer back.</p>
+<p>Sounds good in theory. But there are things to watch out for.</p>
+<p>Long running transactions in the green environment. When you switch over to blue, you have to gracefully handle those outstanding transactions as well as the new ones. This also can become troublesome if your DB backends cannot handle this (see below)<br>Enterprise deployments are not typically amenable to “microservice” style deployments – that is, you may have a hybrid of microservice style apps, and some traditional, difficult-to-change-apps working together. Coordinating between the two for a blue-green deployment can still lead to downtime<br>Database migrations can get really tricky and would have to be migrated/rolledback alongside the app deployments. There are good tools and techniques for doing this, but in an environment with traditional RDBMS, NoSQL, and file-system backed DBs, these things really need to be thought through ahead of time; blindly saying you’re doing Blue Green deployments doesn’t help anything – actually could hurt.<br>You need to have the infrastructure to do this<br>If you try to do this on non-isolated infrastructure (VMs, Docker, etc), you run the risk of destroying your blue AND green environments</p>
+<p>As I’ve said, there are good techniques to overcome these challenges and make this deployment style work out very nicely, including plugging into a continuous deployment pipeline, but don’t jump into it trivially.</p>
+<h2 id="A-B-Testing"><a href="#A-B-Testing" class="headerlink" title="A/B Testing"></a>A/B Testing</h2><p>A/B testing is NOT blue-green deployments. I’ve run into groups that mistake this. A/B testing is a way of testing features in your application for various reasons like usability, popularity, noticeability, etc, and how those factors influence the bottom line. It’s usually associated with UI parts of the app, but of course the backend services need to be available to do this. You can implement this with application-level switches (ie, smart logic that knows when to display certain UI controls), static switches (in the application), and also using Canary releases (as discussed below).</p>
+<p><img src="/2018/05/29/testsCategry/abtesting.png" alt=""></p>
+<p>The difference between blue-green deployments and A/B testing is A/B testing is for measuring functionality in the app. Blue-green deployments is about releasing new software safely and rolling back predictably. You can obviously combine them: use blue-green deployments to deploy new features in an app that can be used for A/B testing.</p>
+<h2 id="Canary-releases"><a href="#Canary-releases" class="headerlink" title="Canary releases"></a>Canary releases</h2><p>Lastly, Canary releases are a way of sending out a new version of your app into production that plays the role of a “canary” to get an idea of how it will perform (integrate with other apps, CPU, memory, disk usage, etc). It’s another release strategy that can mitigate the fact that regardless of the immense level of testing you do in lower environments you will still have some bugs in production. Canary releases let you test the waters before pulling the trigger on a full release.</p>
+<p><img src="/2018/05/29/testsCategry/canarydeployment.png" alt=""></p>
+<p>The faster feedback you get, the faster you can fail the deployment, or proceed cautiously. For some of the same reasons as the blue-green deployments, be careful of things above to watch out for; ie, database changes can still trip you up.</p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>All of these strategies can be implemented regardless of whether you’re using a particular cloud technology. But as you can imagine, technologies such as Docker and Kubernetes can be greatly helpful (if not even have provisions built in) for implementing these strategies. For example, OpenShift and Fabric8 greatly simplifies using Docker and Kubernetes by providing the tooling necessary to use these technologies without having to worry about the underlying details.</p>
+<p>ref. <a href="http://blog.christianposta.com/deploy/blue-green-deployments-a-b-testing-and-canary-releases/" target="_blank" rel="noopener">http://blog.christianposta.com/deploy/blue-green-deployments-a-b-testing-and-canary-releases/</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/29/testsCategry/" data-id="cjhrk3poc000408l7d91gnhlr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/15/transactions/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">可靠消息最终一致性</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/05/29/testsCategry/">Blue-green Deployments, A/B Testing, and Canary Releases</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/transactions/">可靠消息最终一致性</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/10/springCloud/">Spring Cloud</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/08/docker/">Docker</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
