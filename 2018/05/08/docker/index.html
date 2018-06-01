@@ -7,18 +7,18 @@
   
   <title>Docker | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+  <meta name="description" content="操作虚拟机列出虚拟机 $docker-machine ls 启动虚拟机 $ docker-machine start default 停止虚拟机 $ docker-machine stop default 查看虚拟机IP $ docker-machine ip 查看虚拟机环境 $ docker-machine env 操作容器 启动容器启动容器并启动bash（交互方式）: $docker run">
 <meta name="keywords" content="Docker">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Docker">
 <meta property="og:url" content="http://yoursite.com/2018/05/08/docker/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+<meta property="og:description" content="操作虚拟机列出虚拟机 $docker-machine ls 启动虚拟机 $ docker-machine start default 停止虚拟机 $ docker-machine stop default 查看虚拟机IP $ docker-machine ip 查看虚拟机环境 $ docker-machine env 操作容器 启动容器启动容器并启动bash（交互方式）: $docker run">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-05-08T07:11:06.769Z">
+<meta property="og:updated_time" content="2018-06-01T02:31:13.850Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Docker">
-<meta name="twitter:description" content="操作容器 启动容器启动容器并启动bash（交互方式）: $docker run -i -t &amp;lt;image_name/continar_id&amp;gt; /bin/bash 启动容器以后台方式运行(更通用的方式）： $docker run -d -it  image_name ps：这里的 image_name 包含了tag：hello.demo.kdemo:v1.0附着到容器 附着到正在运行的容">
+<meta name="twitter:description" content="操作虚拟机列出虚拟机 $docker-machine ls 启动虚拟机 $ docker-machine start default 停止虚拟机 $ docker-machine stop default 查看虚拟机IP $ docker-machine ip 查看虚拟机环境 $ docker-machine env 操作容器 启动容器启动容器并启动bash（交互方式）: $docker run">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -91,7 +91,17 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="操作容器"><a href="#操作容器" class="headerlink" title="操作容器"></a>操作容器</h1><hr>
+        <h1 id="操作虚拟机"><a href="#操作虚拟机" class="headerlink" title="操作虚拟机"></a>操作虚拟机</h1><p>列出虚拟机</p>
+<pre><code>$docker-machine ls
+</code></pre><p>启动虚拟机</p>
+<pre><code>$ docker-machine start default
+</code></pre><p>停止虚拟机</p>
+<pre><code>$ docker-machine stop default
+</code></pre><p>查看虚拟机IP</p>
+<pre><code>$ docker-machine ip
+</code></pre><p>查看虚拟机环境</p>
+<pre><code>$ docker-machine env
+</code></pre><h1 id="操作容器"><a href="#操作容器" class="headerlink" title="操作容器"></a>操作容器</h1><hr>
 <h3 id="启动容器"><a href="#启动容器" class="headerlink" title="启动容器"></a>启动容器</h3><p>启动容器并启动bash（交互方式）:</p>
 <pre><code>$docker run -i -t &lt;image_name/continar_id&gt; /bin/bash
 </code></pre><p>启动容器以后台方式运行(更通用的方式）：</p>
@@ -172,7 +182,7 @@ $docker restart name/ID
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/docker/" data-id="cjhrk3pnw000008l77er6q4vr" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/docker/" data-id="cjhvd79z40000lgl7fria7odw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li></ul>
