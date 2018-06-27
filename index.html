@@ -62,6 +62,99 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-springDAO" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/06/08/springDAO/" class="article-date">
+  <time datetime="2018-06-08T04:52:08.000Z" itemprop="datePublished">2018-06-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Maven/">Maven</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/06/08/springDAO/">Spring Data access</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Spring-DAO"><a href="#Spring-DAO" class="headerlink" title="Spring-DAO"></a>Spring-DAO</h1><p>Spring-DAO is not stricto senso a spring module, but rather conventions that should dictate you to write DAO, and to write them well. As such, it does neither provide interfaces nor implementations nor templates to access your data. When writing a DAO, you should annotate them with @Repository so that exceptions linked to the underlying technology (JDBC, Hibernate, JPA, etc.) are consistently translated into the proper DataAccessException subclass.</p>
+<p>As an example, suppose you’re now using Hibernate, and your service layer catches HibernateException in order to react to it. If you change to JPA, your DAOs interfaces should not change, and the service layer will still compile with blocks that catches HibernateException, but you will never enter these blocks as your DAOs are now throwing JPA PersistenceException. By using @Repository on your DAO, the exceptions linked to the underlying technology are translated to Spring DataAccessException; your service layer catches these exceptions and if you decide to change the persistence technology, the same Spring DataAccessExceptions will still be thrown as spring have translated native exceptions.</p>
+<p>Note however that this has limited usage for the following reasons:</p>
+<ol>
+<li>Your should usually not catch persistence exceptions, as the provider may have rolled back the transaction (depending on the exact exception subtype), and thus you should not continue the execution with an alternative path.</li>
+</ol>
+<ol start="2">
+<li>The hierarchy of exceptions is usually richer in your provider than what Spring provides, and there’s no definitive mapping from one provider to the other. Relying on this is hazardous. This is however a good idea to annotate your DAOs with @Repository, as the beans will be automatically added by the scan procedure. Further, Spring may add other useful features to the annotation.</li>
+</ol>
+<h1 id="Spring-JDBC"><a href="#Spring-JDBC" class="headerlink" title="Spring-JDBC"></a>Spring-JDBC</h1><p>Spring-JDBC provides the JdbcTemplate class, that removes plumbing code and helps you concentrate on the SQL query and parameters. You just need to configure it with a DataSource, and you can then write code like this:</p>
+<pre><code>int nbRows = jdbcTemplate.queryForObject(&quot;select count(1) from person&quot;, Integer.class);
+
+Person p = jdbcTemplate.queryForObject(&quot;select first, last from person where id=?&quot;, 
+ rs -new Person(rs.getString(1), rs.getString(2)), 
+ 134561351656L);
+</code></pre><p>Spring-JDBC also provides a JdbcDaoSupport, that you can extend to develop your DAO. It basically defines 2 properties: a DataSource and a JdbcTemplate that both can be used to implement the DAO methods. It also provides an exceptions translator from SQL exceptions to spring DataAccessExceptions.</p>
+<p>If you plan to use plain jdbc, this is the module you will need to use.</p>
+<h1 id="Spring-ORM"><a href="#Spring-ORM" class="headerlink" title="Spring-ORM"></a>Spring-ORM</h1><p>Spring-ORM is an umbrella module that covers many persistence technologies, namely JPA, JDO, Hibernate and iBatis. For each of these technologies, Spring provides integration classes so that each technology can be used following Spring principles of configuration, and smoothly integrates with Spring transaction management.</p>
+<p>For each technology, the configuration basically consists in injecting a DataSource bean into some kind of SessionFactory or EntityManagerFactory etc. bean. For pure JDBC, there’s no need for such integration classes (apart from JdbcTemplate), as JDBC only relies on a DataSource.</p>
+<p>If you plan to use an ORM like JPA or Hibernate, you will not need spring-jdbc, but only this module.</p>
+<h1 id="Spring-Data"><a href="#Spring-Data" class="headerlink" title="Spring-Data"></a>Spring-Data</h1><p>Spring-Data is an umbrella project that provides a common API to define how to access data (DAO + annotations) in a more generic way, covering both SQL and NOSQL data sources.</p>
+<p>The initial idea is to provide a technology so that the developer writes the interface for a DAO (finder methods) and the entity classes in a technology-agnostic way and, based on configuration only (annotations on DAOs &amp; entities + spring configuration, be it xml- or java-based), decides the implementation technology, be it JPA (SQL) or redis, hadoop, etc. (NOSQL).</p>
+<p>If you follow the naming conventions defined by spring for the finder method names, you don’t even need to provide the query strings corresponding to finder methods for the most simple cases. For other situations, you have to provide the query string inside annotations on the finder methods.</p>
+<p>When the application context is loaded, spring provides proxies for the DAO interfaces, that contain all the boilerplate code related to the data access technology, and invokes the configured queries.</p>
+<p>Spring-Data concentrates on non-SQL technologies, but still provides a module for JPA (the only SQL technology).</p>
+<h3 id="Need-Hibernate…"><a href="#Need-Hibernate…" class="headerlink" title="Need  Hibernate…?"></a>Need  Hibernate…?</h3><p>You can use a core Spring module like Spring JDBC for directly working with MySQL (or any other RDBMS) but if you wish to use Spring Data JPA, you will need an underlying JPA implementation (since Spring Data JPA is a wrapper on top of JPA and not a JPA implementation in itself) like Hibernate or EclipseLink.</p>
+<p>The structure is as follows:</p>
+<pre><code>Spring Data JPA
+   |
+  JPA
+   |
+Hibernate
+</code></pre><p>You need Hibernate as an JPA implementation, but from your perspective you should only see Spring Data JPA.</p>
+<p>When designing your entities if you make sure that you use only annotations from the javax.persistence package you will not depend on one concrete JPA implementation (in this case Hibernate) but theoretically you could swap Hibernate for EclipseLink or something else.</p>
+<h1 id="What’s-next"><a href="#What’s-next" class="headerlink" title="What’s next"></a>What’s next</h1><p>Knowing all this, you have now to decide what to pick. The good news here is that you don’t need to make a definitive final choice for the technology. This is actually where Spring power resides : as a developer, you concentrate on the business when you write code, and if you do it well, changing the underlying technology is an implementation or configuration detail.</p>
+<ol>
+<li>Define a data model with POJO classes for the entities, and get/set methods to represent the entity attributes and the relationships to other entities. You will certainly need to annotate the entity classes and fields based on the technology, but for now, POJOs are enough to start with. Just concentrate on the business requirements for now.</li>
+</ol>
+<ol start="2">
+<li>Define interfaces for your DAOs. 1 DAO covers exactly 1 entity, but you will certainly not need a DAO for each of them, as you should be able to load additional entities by navigating the relationships. Define the finder methods following strict naming conventions.</li>
+</ol>
+<ol start="3">
+<li>Based on this, someone else can start working on the services layer, with mocks for your DAOs.</li>
+</ol>
+<ol start="4">
+<li>You learn the different persistence technologies (sql, no-sql) to find the best fit for your needs, and choose one of them. Based on this, you annotate the entities and implement the DAOs (or let spring implement them for you if you choose to use spring-data).</li>
+</ol>
+<ol start="5">
+<li>If the business requirements evolve and your data access technology is not sufficient to support it (say, you started with JDBC and a few entities, but now need a richer data model and JPA is a better choice), you will have to change the implementation of your DAOs, add a few annotations on your entities and change the spring configuration (add an EntityManagerFactory definition). The rest of your business code should not see other impacts from your change.</li>
+</ol>
+<h1 id="Note-Transaction-Management"><a href="#Note-Transaction-Management" class="headerlink" title="Note : Transaction Management"></a>Note : Transaction Management</h1><p>Spring provides an API for transaction management. If you plan to use spring for the data access, you should also use spring for transaction management, as they integrate together really well. For each data access technology supported by spring, there is a matching transaction manager for local transactions, or you can choose JTA if you need distributed transactions. All of them implement the same API, so that (once again) the technology choice is just a matter a configuration that can be changed without further impact on the business code.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/06/08/springDAO/" data-id="cjiwuy0u60006i8l7xovknh8m" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-testsCategry" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2018/05/29/testsCategry/" class="article-date">
@@ -109,10 +202,212 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/29/testsCategry/" data-id="cji5oq3rb000fkol72ur7h2tj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/29/testsCategry/" data-id="cjiwuy0uf000di8l7se9khrx1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-backpressure" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/15/backpressure/" class="article-date">
+  <time datetime="2018-05-15T06:26:09.000Z" itemprop="datePublished">2018-05-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/15/backpressure/">Backpressure</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>背压（Backpressure）可能是所有想要深入运用RxJava的朋友必须理解的一个概念。<br>关于它的介绍，我本意是想写在RxJava2.0更新介绍的文章里的，可是写着写着发现，要完整介绍这个概念需要花费的篇幅太长，恰好目前对于背压的介绍文章比较少，所以决定单独拿出来，自成一篇。而关于RxJava2.0的文章修改之后就会发出来和大家探讨。<br>如果对于RxJava不是很熟悉，那么在这篇文章之前，我希望大家先看看那篇关于Rxjava最友好的文章，可以帮助大家很顺畅的了解RxJava。</p>
+<h1 id="从场景出发"><a href="#从场景出发" class="headerlink" title="从场景出发"></a>从场景出发</h1><p>让我们先忘掉背压（Backpressure）这个概念，从RxJava一个比较常见的工作场景说起。<br>RxJava是一个观察者模式的架构，当这个架构中被观察者(Observable)和观察者(Subscriber)处在不同的线程环境中时，由于者各自的工作量不一样，导致它们产生事件和处理事件的速度不一样，这就会出现两种情况：</p>
+<p>被观察者产生事件慢一些，观察者处理事件很快。那么观察者就会等着被观察者发送事件，（好比观察者在等米下锅，程序等待，这没有问题）。关于背压（Backpressure）<br>被观察者产生事件的速度很快，而观察者处理很慢。那就出问题了，如果不作处理的话，事件会堆积起来，最终挤爆你的内存，导致程序崩溃。（好比被观察者生产的大米没人吃，堆积最后就会烂掉）。</p>
+<p>下面我们用代码演示一下这种崩溃的场景：</p>
+<pre><code>//被观察者在主线程中，每1ms发送一个事件
+Observable.interval(1, TimeUnit.MILLISECONDS)
+            //.subscribeOn(Schedulers.newThread())
+            //将观察者的工作放在新线程环境中
+            .observeOn(Schedulers.newThread())
+            //观察者处理每1000ms才处理一个事件
+            .subscribe(new Action1&lt;Long&gt;() {
+                  @Override
+                  public void call(Long aLong) {
+                      try {
+                          Thread.sleep(1000);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                  }
+              });
+</code></pre><p>在上面的代码中，被观察者发送事件的速度是观察者处理速度的1000倍<br>这段代码运行之后：</p>
+<pre><code>...
+Caused by: rx.exceptions.MissingBackpressureException
+...
+...
+</code></pre><p>抛出MissingBackpressureException往往就是因为，被观察者发送事件的速度太快，而观察者处理太慢，而且你还没有做相应措施，所以报异常。<br>而这个MissingBackpressureException异常里面就包含了Backpressure这个单词，看来背压肯定和这种异常情况有关系。<br>那么背压（Backpressure）到底是什么呢？</p>
+<h1 id="关于背压（Backpressure）"><a href="#关于背压（Backpressure）" class="headerlink" title="关于背压（Backpressure）"></a>关于背压（Backpressure）</h1><p>我这两天翻阅了大量的中文和英文资料，我发现中文资料中，很多人对于背压（Backpressure）的理解是有很大问题的，有的人把它看作一个需要避免的问题，或者程序的异常，有的人则干脆避而不谈，模棱两可，着实让人尴尬。<br>通过参考和对比大量的相关资料，我在这里先对背压（Backpressure）做一个明确的定义：背压是指在异步场景中，被观察者发送事件速度远快于观察者的处理速度的情况下，一种告诉上游的被观察者降低发送速度的策略<br>简而言之，背压是流速控制的一种策略。<br>需要强调两点：</p>
+<p>背压策略的一个前提是异步环境，也就是说，被观察者和观察者处在不同的线程环境中。<br>背压（Backpressure）并不是一个像flatMap一样可以在程序中直接使用的操作符，他只是一种控制事件流速的策略。</p>
+<p>那么我们再回看上面的程序异常就很好理解了，就是当被观察者发送事件速度过快的情况下，我们没有做流速控制，导致了异常。<br>那么背压（Backpressure）策略具体是哪如何实现流速控制的呢？</p>
+<h1 id="响应式拉取（reactive-pull）"><a href="#响应式拉取（reactive-pull）" class="headerlink" title="响应式拉取（reactive pull）"></a>响应式拉取（reactive pull）</h1><p>首先我们回忆之前那篇关于Rxjava最友好的文章，里面其实提到，在RxJava的观察者模型中，被观察者是主动的推送数据给观察者，观察者是被动接收的。而响应式拉取则反过来，观察者主动从被观察者那里去拉取数据，而被观察者变成被动的等待通知再发送数据。<br>结构示意图如下：<br><img src="/2018/05/15/backpressure/1627a7f426088d78.png" alt=""><br>观察者可以根据自身实际情况按需拉取数据，而不是被动接收（也就相当于告诉上游观察者把速度慢下来），最终实现了上游被观察者发送事件的速度的控制，实现了背压的策略。<br>代码实例如下：</p>
+<pre><code>//被观察者将产生100000个事件
+Observable observable=Observable.range(1,100000);
+class MySubscriber extends Subscriber&lt;T&gt; {
+    @Override
+    public void onStart() {
+    //一定要在onStart中通知被观察者先发送一个事件
+      request(1);
+    }
+
+    @Override
+    public void onCompleted() {
+        ...
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        ...
+    }
+
+    @Override
+    public void onNext(T n) {
+        ...
+        ...
+        //处理完毕之后，在通知被观察者发送下一个事件
+        request(1);
+    }
+}
+
+observable.observeOn(Schedulers.newThread())
+        .subscribe(MySubscriber);
+</code></pre><p>在代码中，传递事件开始前的onstart()中，调用了request(1)，通知被观察者先发送一个事件，然后在onNext()中处理完事件，再次调用request(1)，通知被观察者发送下一个事件….</p>
+<p>注意在onNext()方法中，最好最后再调用request()方法.</p>
+<p>如果你想取消这种backpressure 策略，调用quest(Long.MAX_VALUE)即可。<br>实际上，在上面的代码中，你也可以不需要调用request(n)方法去拉取数据，程序依然能完美运行，这是因为range –&gt; observeOn,这一段中间过程本身就是响应式拉取数据，observeOn这个操作符内部有一个缓冲区，Android环境下长度是16，它会告诉range最多发送16个事件，充满缓冲区即可。不过话说回来，在观察者中使用request(n)这个方法可以使背压的策略表现得更加直观，更便于理解。<br>如果你足够细心，会发现，在开头展示异常情况的代码中，使用的是interval这个操作符，但是在这里使用了range操作符，为什么呢？<br>这是因为interval操作符本身并不支持背压策略，它并不响应request(n)，也就是说，它发送事件的速度是不受控制的，而range这类操作符是支持背压的，它发送事件的速度可以被控制。<br>那么到底什么样的Observable是支持背压的呢？</p>
+<h1 id="Hot-and-Cold-Observables"><a href="#Hot-and-Cold-Observables" class="headerlink" title="Hot and Cold Observables"></a>Hot and Cold Observables</h1><p>需要说明的时，Hot Observables 和cold Observables并不是严格的概念区分，它只是对于两类Observable形象的描述</p>
+<p>Cold Observables：指的是那些在订阅之后才开始发送事件的Observable（每个Subscriber都能接收到完整的事件）。<br>Hot Observables:指的是那些在创建了Observable之后，（不管是否订阅）就开始发送事件的Observable</p>
+<p>其实也有创建了Observable之后调用诸如publish()方法就可以开始发送事件的,这里咱们暂且忽略。</p>
+<p>我们一般使用的都是Cold Observable，除非特殊需求，才会使用Hot Observable,在这里，Hot Observable这一类是不支持背压的，而是Cold Observable这一类中也有一部分并不支持背压（比如interval，timer等操作符创建的Observable）。<br>懵逼了吧？</p>
+<p>Tips: 都是Observable，结果有的支持背压，有的不支持，这就是RxJava1.X的一个问题。在2.0中，这种问题已经解决了，以后谈到2.0时再细说。</p>
+<p>在那些不支持背压策略的操作符中使用响应式拉取数据的话，还是会抛出MissingBackpressureException。<br>那么，不支持背压的Observevable如何做流速控制呢？</p>
+<h1 id="流速控制相关的操作符"><a href="#流速控制相关的操作符" class="headerlink" title="流速控制相关的操作符"></a>流速控制相关的操作符</h1><h2 id="过滤（抛弃）"><a href="#过滤（抛弃）" class="headerlink" title="过滤（抛弃）"></a>过滤（抛弃）</h2><p>就是虽然生产者产生事件的速度很快，但是把大部分的事件都直接过滤（浪费）掉，从而间接的降低事件发送的速度。<br>相关类似的操作符：Sample，ThrottleFirst….<br>以sample为例，</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+            .observeOn(Schedulers.newThread())
+            //这个操作符简单理解就是每隔200ms发送里时间点最近那个事件，
+            //其他的事件浪费掉
+              .sample(200,TimeUnit.MILLISECONDS)
+              .subscribe(new Action1&lt;Long&gt;() {
+                  @Override
+                  public void call(Long aLong) {
+                      try {
+                          Thread.sleep(200);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                  }
+              });
+</code></pre><p>这是以杀敌一千，自损八百的方式解决这个问题，因为抛弃了绝大部分的事件，而在我们使用RxJava 时候，我们自己定义的Observable产生的事件可能都是我们需要的，一般来说不会抛弃，所以这种方案有它的缺陷。</p>
+<h2 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h2><p>就是虽然被观察者发送事件速度很快，观察者处理不过来，但是可以选择先缓存一部分，然后慢慢读。<br>相关类似的操作符：buffer，window…<br>以buffer为例，</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+
+            .observeOn(Schedulers.newThread())
+            //这个操作符简单理解就是把100毫秒内的事件打包成list发送
+            .buffer(100,TimeUnit.MILLISECONDS)
+              .subscribe(new Action1&lt;List&lt;Long&gt;&gt;() {
+                  @Override
+                  public void call(List&lt;Long&gt; aLong) {
+                      try {
+                          Thread.sleep(1000);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong.size());
+                  }
+              });
+</code></pre><h2 id="两个特殊操作符"><a href="#两个特殊操作符" class="headerlink" title="两个特殊操作符"></a>两个特殊操作符</h2><p>对于不支持背压的Observable除了使用上述两类生硬的操作符之外，还有更好的选择：onBackpressurebuffer，onBackpressureDrop。</p>
+<p>onBackpressurebuffer：把observable发送出来的事件做缓存，当request方法被调用的时候，给下层流发送一个item(如果给这个缓存区设置了大小，那么超过了这个大小就会抛出异常)。<br>onBackpressureDrop：将observable发送的事件抛弃掉，直到subscriber再次调用request（n）方法的时候，就发送给它这之后的n个事件。</p>
+<p>下面，我们以onBackpressureDrop为例说说用法：</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+            .onBackpressureDrop()
+            .observeOn(Schedulers.newThread())
+           .subscribe(new Subscriber&lt;Long&gt;() {
+
+                @Override
+                public void onStart() {
+                    Log.w(&quot;TAG&quot;,&quot;start&quot;);
+                    request(1);
+                }
+
+                @Override
+                  public void onCompleted() {
+
+                  }
+                  @Override
+                  public void onError(Throwable e) {
+                        Log.e(&quot;ERROR&quot;,e.toString());
+                  }
+
+                  @Override
+                  public void onNext(Long aLong) {
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                      try {
+                          Thread.sleep(100);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                  }
+              });
+</code></pre><p>这段代码的输出：</p>
+<pre><code>W/TAG: start
+W/TAG: ----&gt;0
+W/TAG: ----&gt;1
+W/TAG: ----&gt;2
+W/TAG: ----&gt;3
+W/TAG: ----&gt;4
+W/TAG: ----&gt;5
+W/TAG: ----&gt;6
+W/TAG: ----&gt;7
+W/TAG: ----&gt;8
+W/TAG: ----&gt;9
+W/TAG: ----&gt;10
+W/TAG: ----&gt;11
+W/TAG: ----&gt;12
+W/TAG: ----&gt;13
+W/TAG: ----&gt;14
+W/TAG: ----&gt;15
+W/TAG: ----&gt;1218
+W/TAG: ----&gt;1219
+W/TAG: ----&gt;1220
+...
+</code></pre><p>之所以出现0-15这样连贯的数据，就是是因为observeOn操作符内部有一个长度为16的缓存区，它会首先请求16个事件缓存起来….<br>你可能会觉得这两个操作符和上面讲的过滤和缓存很类似，确实，功能上是有些类似，但是这两个操作符提供了更多的特性，那就是可以响应下游观察者的request(n)方法了，也就是说，使用了这两种操作符，可以让原本不支持背压的Observable“支持”背压了。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>背压是一种策略，具体措施是下游观察者通知上游的被观察者发送事件<br>背压策略很好的解决了异步环境下被观察者和观察者速度不一致的问题<br>在RxJava1.X中，同样是Observable，有的不支持背压策略，导致某些情况下，显得特别麻烦，出了问题也很难排查，使得RxJava的学习曲线变得十份陡峭。</p>
+<p>这篇文章并不是为了让你学习在RxJava1.0中使用背压（如果你之前不了解背压的话），因为在1.0中，背压的设计并不十分完美。而是希望你对背压有一个全面清晰的认识，对于它在RxJava1.0中的设计缺陷有所了解即可。</p>
+<p>链接：<a href="https://juejin.im/post/582d413c8ac24700619cceed" target="_blank" rel="noopener">https://juejin.im/post/582d413c8ac24700619cceed</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/15/backpressure/" data-id="cjiwuy0t60000i8l71rqohguv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Backpressure/">Backpressure</a></li></ul>
 
     </footer>
   </div>
@@ -196,7 +491,7 @@ public void test1(){
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/15/transactions/" data-id="cji5oq3s4000okol797su0ylh" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/15/transactions/" data-id="cjiwuy0uc000bi8l70h327diz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/事务/">事务</a></li></ul>
@@ -254,10 +549,273 @@ public void test1(){
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/10/springCloud/" data-id="cji5oq3pj0004kol7fo8wjzyk" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/10/springCloud/" data-id="cjiwuy0u90009i8l7an13wtwf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-classloader" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/08/classloader/" class="article-date">
+  <time datetime="2018-05-08T04:52:08.000Z" itemprop="datePublished">2018-05-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Classloader/">Classloader</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2018/05/08/classloader/">Classloader</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="什么是-Java-类加载机制"><a href="#什么是-Java-类加载机制" class="headerlink" title="什么是 Java 类加载机制?"></a>什么是 Java 类加载机制?</h1><p>Java 虚拟机一般使用 Java 类的流程为：首先将开发者编写的 Java 源代码（.java文件）编译成 Java 字节码（.class文件），然后类加载器会读取这个 .class 文件，并转换成 java.lang.Class 的实例。有了该 Class 实例后，Java 虚拟机可以利用 newInstance 之类的方法创建其真正对象了。</p>
+<p>ClassLoader 是 Java 提供的类加载器，绝大多数的类加载器都继承自 ClassLoader，它们被用来加载不同来源的 Class 文件。</p>
+<h2 id="Class-文件有哪些来源呢"><a href="#Class-文件有哪些来源呢" class="headerlink" title="Class 文件有哪些来源呢?"></a>Class 文件有哪些来源呢?</h2><p>上文提到了 ClassLoader 可以去加载多种来源的 Class，那么具体有哪些来源呢？</p>
+<p>首先，最常见的是开发者在应用程序中编写的类，这些类位于项目目录下；</p>
+<p>然后，有 Java 内部自带的核心类如 java.lang、java.math、java.io 等 package 内部的类，位于 $JAVA_HOME/jre/lib/ 目录下，如 java.lang.String 类就是定义在 $JAVA_HOME/jre/lib/rt.jar 文件里；</p>
+<p>另外，还有 Java 核心扩展类，位于 $JAVA_HOME/jre/lib/ext 目录下。开发者也可以把自己编写的类打包成 jar 文件放入该目录下；</p>
+<p>最后还有一种，是动态加载远程的 .class 文件。</p>
+<p>既然有这么多种类的来源，那么在 Java 里，是由某一个具体的 ClassLoader 来统一加载呢？还是由多个 ClassLoader 来协作加载呢？</p>
+<h1 id="哪些-ClassLoader-负责加载上面几类-Class？"><a href="#哪些-ClassLoader-负责加载上面几类-Class？" class="headerlink" title="哪些 ClassLoader 负责加载上面几类 Class？"></a>哪些 ClassLoader 负责加载上面几类 Class？</h1><p>实际上，针对上面四种来源的类，分别有不同的加载器负责加载。</p>
+<p>首先，我们来看级别最高的 Java 核心类，即$JAVA_HOME/jre/lib 里的核心 jar 文件。这些类是 Java 运行的基础类，由一个名为 BootstrapClassLoader 加载器负责加载，它也被称作 根加载器／引导加载器。注意，BootstrapClassLoader 比较特殊，它不继承 ClassLoader，而是由 JVM 内部实现；</p>
+<p>然后，需要加载 Java 核心扩展类，即 $JAVA_HOME/jre/lib/ext 目录下的 jar 文件。这些文件由 ExtensionClassLoader 负责加载，它也被称作 扩展类加载器。当然，用户如果把自己开发的 jar 文件放在这个目录，也会被 ExtClassLoader 加载；</p>
+<p>接下来是开发者在项目中编写的类，这些文件将由 AppClassLoader 加载器进行加载，它也被称作 系统类加载器 System ClassLoader；</p>
+<p>最后，如果想远程加载如（本地文件／网络下载）的方式，则必须要自己自定义一个 ClassLoader，复写其中的 findClass() 方法才能得以实现。</p>
+<p>因此能看出，Java 里提供了至少四类 ClassLoader 来分别加载不同来源的 Class。</p>
+<p>那么，这几种 ClassLoader 是如何协作来加载一个类呢？</p>
+<h1 id="这些-ClassLoader-以何种方式来协作加载-String-类呢？"><a href="#这些-ClassLoader-以何种方式来协作加载-String-类呢？" class="headerlink" title="这些 ClassLoader 以何种方式来协作加载 String 类呢？"></a>这些 ClassLoader 以何种方式来协作加载 String 类呢？</h1><p>String 类是 Java 自带的最常用的一个类，现在的问题是，JVM 将以何种方式把 String class 加载进来呢？</p>
+<p>我们来猜想下。</p>
+<p>首先，String 类属于 Java 核心类，位于 $JAVA_HOME/jre/lib 目录下。有的朋友会马上反应过来，上文中提过了，该目录下的类会由 BootstrapClassLoader 进行加载。没错，它确实是由 BootstrapClassLoader 进行加载。但，这种回答的前提是你已经知道了 String 在 $JAVA_HOME/jre/lib 目录下。</p>
+<p>那么，如果你并不知道 String 类究竟位于哪呢？或者我希望你去加载一个 unknown 的类呢？</p>
+<p>有的朋友这时会说，那很简单，只要去遍历一遍所有的类，看看这个 unknown 的类位于哪里，然后再用对应的加载器去加载。</p>
+<p>是的，思路很正确。那应该如何去遍历呢？</p>
+<p>比如，可以先遍历用户自己写的类，如果找到了就用 AppClassLoader 去加载；否则去遍历 Java 核心类目录，找到了就用 BootstrapClassLoader 去加载，否则就去遍历 Java 扩展类库，依次类推。</p>
+<p>这种思路方向是正确的，不过存在一个漏洞。</p>
+<p>假如开发者自己伪造了一个 java.lang.String 类，即在项目中创建一个包java.lang，包内创建一个名为 String 的类，这完全可以做到。那如果利用上面的遍历方法，是不是这个项目中用到的 String 不是都变成了这个伪造的 java.lang.String 类吗？如何解决这个问题呢？</p>
+<p>解决方法很简单，当查找一个类时，优先遍历最高级别的 Java 核心类，然后再去遍历 Java 核心扩展类，最后再遍历用户自定义类，而且这个遍历过程是一旦找到就立即停止遍历。</p>
+<p>在 Java 中，这种实现方式也称作 双亲委托（Delegation Principle）。其实很简单，把 BootstrapClassLoader 想象为核心高层领导人， ExtClassLoader 想象为中层干部， AppClassLoader 想象为普通公务员。每次需要加载一个类，先获取一个系统加载器 AppClassLoader 的实例（ClassLoader.getSystemClassLoader()），然后向上级层层请求，由最上级优先去加载，如果上级觉得这些类不属于核心类，就可以下放到各子级负责人去自行加载。</p>
+<p>如下图所示：<br><img src="/2018/05/08/classloader/aaa.png" alt=""></p>
+<h1 id="真的是按照双亲委托方式进行类加载吗？"><a href="#真的是按照双亲委托方式进行类加载吗？" class="headerlink" title="真的是按照双亲委托方式进行类加载吗？"></a>真的是按照双亲委托方式进行类加载吗？</h1><p>下面通过几个例子来验证上面的加载方式。<br>开发者自定义的类会被 AppClassLoader 加载吗？</p>
+<p>在项目中创建一个名为 MusicPlayer 的类文件，内容如下：</p>
+<pre><code>package classloader;
+
+public class MusicPlayer {
+    public void print() {
+        System.out.printf(&quot;Hi I&apos;m MusicPlayer&quot;);
+    }
+}
+</code></pre><p>然后来加载 MusicPlayer。</p>
+<pre><code>private static void loadClass() throws ClassNotFoundException {
+Class&lt;?&gt; clazz = Class.forName(&quot;classloader.MusicPlayer&quot;);
+ClassLoader classLoader = clazz.getClassLoader();
+System.out.printf(&quot;ClassLoader is %s&quot;, classLoader.getClass().getSimpleName());
+}
+</code></pre><p>打印结果为：</p>
+<pre><code>ClassLoader is AppClassLoader
+</code></pre><p>可以验证，MusicPlayer 是由 AppClassLoader 进行的加载。<br>验证 AppClassLoader 的双亲真的是 ExtClassLoader 和 BootstrapClassLoader 吗？</p>
+<p>这时发现 AppClassLoader 提供了一个 getParent() 的方法，来打印看看都是什么。</p>
+<pre><code>private static void printParent() throws ClassNotFoundException {
+        Class&lt;?&gt; clazz = Class.forName(&quot;classloader.MusicPlayer&quot;);
+        ClassLoader classLoader = clazz.getClassLoader();
+        System.out.printf(&quot;currentClassLoader is %s\n&quot;, classLoader.getClass().getSimpleName());
+
+        while (classLoader.getParent() != null) {
+            classLoader = classLoader.getParent();
+            System.out.printf(&quot;Parent is %s\n&quot;, classLoader.getClass().getSimpleName());
+        }
+}
+</code></pre><p>打印结果为：</p>
+<pre><code>currentClassLoader is AppClassLoader
+Parent is ExtClassLoader
+</code></pre><p>首先能看到 ExtClassLoader 确实是 AppClassLoader 的双亲，不过却没有看到 BootstrapClassLoader。事实上，上文就提过， BootstrapClassLoader比较特殊，它是由 JVM 内部实现的，所以 ExtClassLoader.getParent() = null。<br>如果把 MusicPlayer 类挪到 $JAVA_HOME/jre/lib/ext 目录下会发生什么？</p>
+<p>上文中说了，ExtClassLoader 会加载$JAVA_HOME/jre/lib/ext 目录下所有的 jar 文件。那来尝试下直接把 MusicPlayer 这个类放到 $JAVA_HOME/jre/lib/ext 目录下吧。</p>
+<p>利用下面命令可以把 MusicPlayer.java 编译打包成 jar 文件，并放置到对应目录。</p>
+<pre><code>javac classloader/MusicPlayer.java
+jar cvf MusicPlayer.jar classloader/MusicPlayer.class
+mv MusicPlayer.jar $JAVA_HOME/jre/lib/ext/
+</code></pre><p>这时 MusicPlayer.jar 已经被放置与 $JAVA_HOME/jre/lib/ext 目录下，同时把之前的 MusicPlayer 删除，而且这一次刻意使用 AppClassLoader 来加载：</p>
+<pre><code>private static void loadClass() throws ClassNotFoundException {
+    ClassLoader appClassLoader = ClassLoader.getSystemClassLoader(); // AppClassLoader
+    Class&lt;?&gt; clazz = appClassLoader.loadClass(&quot;classloader.MusicPlayer&quot;);
+    ClassLoader classLoader = clazz.getClassLoader();
+    System.out.printf(&quot;ClassLoader is %s&quot;, classLoader.getClass().getSimpleName());
+}
+</code></pre><p>打印结果为：</p>
+<p>ClassLoader is ExtClassLoader</p>
+<p>说明即使直接用 AppClassLoader 去加载，它仍然会被 ExtClassLoader 加载到。</p>
+<h1 id="从源码角度真正理解双亲委托加载机制"><a href="#从源码角度真正理解双亲委托加载机制" class="headerlink" title="从源码角度真正理解双亲委托加载机制"></a>从源码角度真正理解双亲委托加载机制</h1><p>上面已经通过一些例子了解了双亲委托的一些特性了，下面来看一下它的实现代码，加深理解。</p>
+<p>打开 ClassLoader 里的 loadClass() 方法，便是需要分析的源码了。这个方法里做了下面几件事：</p>
+<pre><code>1. 检查目标class是否曾经加载过，如果加载过则直接返回；
+2. 如果没加载过，把加载请求传递给 parent 加载器去加载；
+3. 如果 parent 加载器加载成功，则直接返回；
+4. 如果 parent 未加载到，则自身调用 findClass() 方法进行寻找，并把寻找结果返回。
+</code></pre><p>代码如下：</p>
+<pre><code>protected Class&lt;?&gt; loadClass(String name, boolean resolve)
+    throws ClassNotFoundException
+{
+    synchronized (getClassLoadingLock(name)) {
+        // 1. 检查是否曾加载过
+        Class&lt;?&gt; c = findLoadedClass(name);
+        if (c == null) {
+            long t0 = System.nanoTime();
+            try {
+                if (parent != null) {
+                    // 优先让 parent 加载器去加载
+                    c = parent.loadClass(name, false);
+                } else {
+                    // 如无 parent，表示当前是 BootstrapClassLoader，调用 native 方法去 JVM 加载
+                    c = findBootstrapClassOrNull(name);
+                }
+            } catch (ClassNotFoundException e) {
+                // ClassNotFoundException thrown if class not found
+                // from the non-null parent class loader
+            }
+
+            if (c == null) {
+                // 如果 parent 均没有加载到目标class，调用自身的 findClass() 方法去搜索
+                long t1 = System.nanoTime();
+                c = findClass(name);
+
+                // this is the defining class loader; record the stats
+                sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                sun.misc.PerfCounter.getFindClasses().increment();
+            }
+        }
+        if (resolve) {
+            resolveClass(c);
+        }
+        return c;
+    }
+}
+
+// BootstrapClassLoader 会调用 native 方法去 JVM 加载
+private native Class&lt;?&gt; findBootstrapClass(String name);
+</code></pre><p>看完实现源码相信能够有更完整的理解。</p>
+<h1 id="类加载器最酷的一面：自定义类加载器"><a href="#类加载器最酷的一面：自定义类加载器" class="headerlink" title="类加载器最酷的一面：自定义类加载器"></a>类加载器最酷的一面：自定义类加载器</h1><p>前面提到了 Java 自带的加载器 BootstrapClassLoader、AppClassLoader和ExtClassLoader，这些都是 Java 已经提供好的。</p>
+<p>而真正有意思的，是 自定义类加载器，它允许我们在运行时可以从本地磁盘或网络上动态加载自定义类。这使得开发者可以动态修复某些有问题的类，热更新代码。</p>
+<p>下面来实现一个网络类加载器，这个加载器可以从网络上动态下载 .class 文件并加载到虚拟机中使用。</p>
+<p>后面我还会写作与 热修复／动态更新 相关的文章，这里先学习 Java 层 NetworkClassLoader 相关的原理。</p>
+<ol>
+<li>作为一个 NetworkClassLoader，它首先要继承 ClassLoader；</li>
+<li>然后它要实现ClassLoader内的 findClass() 方法。注意，不是loadClass()方法，因为ClassLoader提供了loadClass()（如上面的源码），它会基于双亲委托机制去搜索某个 class，直到搜索不到才会调用自身的findClass()，如果直接复写loadClass()，那还要实现双亲委托机制；</li>
+<li>在 findClass() 方法里，要从网络上下载一个 .class 文件，然后转化成 Class 对象供虚拟机使用。</li>
+</ol>
+<p>具体实现代码如下：</p>
+<pre><code>/**
+ * Load class from network
+ */
+public class NetworkClassLoader extends ClassLoader {
+
+    @Override
+    protected Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
+        byte[] classData = downloadClassData(name); // 从远程下载
+        if (classData == null) {
+            super.findClass(name); // 未找到，抛异常
+        } else {
+            return defineClass(name, classData, 0, classData.length); // convert class byte data to Class&lt;?&gt; object
+        }
+        return null;
+    }
+
+    private byte[] downloadClassData(String name) {
+        // 从 localhost 下载 .class 文件
+        String path = &quot;http://localhost&quot; + File.separatorChar + &quot;java&quot; + File.separatorChar + name.replace(&apos;.&apos;, File.separatorChar) + &quot;.class&quot;; 
+
+        try {
+            URL url = new URL(path);
+            InputStream ins = url.openStream();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            int bufferSize = 4096;
+            byte[] buffer = new byte[bufferSize];
+            int bytesNumRead = 0;
+            while ((bytesNumRead = ins.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesNumRead); // 把下载的二进制数据存入 ByteArrayOutputStream
+            }
+            return baos.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public String getName() {
+        System.out.printf(&quot;Real NetworkClassLoader\n&quot;);
+        return &quot;networkClassLoader&quot;;
+    }
+}
+</code></pre><p>这个类的作用是从网络上（这里是本人的 local apache 服务器 <a href="http://localhost/java" target="_blank" rel="noopener">http://localhost/java</a> 上）目录里去下载对应的 .class 文件，并转换成 Class&lt;?&gt; 返回回去使用。</p>
+<p>下面我们来利用这个 NetworkClassLoader 去加载 localhost 上的 MusicPlayer 类：</p>
+<ol>
+<li>首先把 MusicPlayer.class 放置于 /Library/WebServer/Documents/java （MacOS）目录下，由于 MacOS 自带 apache 服务器，这里是服务器的默认目录；</li>
+</ol>
+<ol start="2">
+<li><p>执行下面一段代码：</p>
+<p> String className = “classloader.NetworkClass”;<br> NetworkClassLoader networkClassLoader = new NetworkClassLoader();<br> Class&lt;?&gt; clazz  = networkClassLoader.loadClass(className);</p>
+</li>
+<li><p>正常运行，加载 <a href="http://localhost/java/classloader/MusicPlayer.class成功。" target="_blank" rel="noopener">http://localhost/java/classloader/MusicPlayer.class成功。</a></p>
+</li>
+</ol>
+<p>可以看出 NetworkClassLoader 可以正常工作，如果读者要用的话，只要稍微修改 url 的拼接方式即可自行使用。</p>
+<h1 id="类加载器与Web容器"><a href="#类加载器与Web容器" class="headerlink" title="类加载器与Web容器"></a>类加载器与Web容器</h1><p>对于运行在 Java EE™容器中的 Web 应用来说，类加载器的实现方式与一般的 Java 应用有所不同。不同的 Web 容器的实现方式也会有所不同。以 Apache Tomcat 来说，每个Web 应用都有一个对应的类加载器实例。该类加载器也使用代理模式，所不同的是它是首先尝试去加载某个类，如果找不到再代理给父类加载器。这与一般类加载器的顺序是相反的。这是 Java Servlet 规范中的推荐做法，其目的是使得Web 应用自己的类的优先级高于 Web 容器提供的类。这种代理模式的一个例外是：Java 核心库的类是不在查找范围之内的。这也是为了保证 Java 核心库的类型安全。</p>
+<p>绝大多数情况下，Web 应用的开发人员不需要考虑与类加载器相关的细节。下面给出几条简单的原则：</p>
+<ol>
+<li><p>每个 Web 应用自己的 Java 类文件和使用的库的 jar 包，分别放在 WEB-INF/classes和 WEB-INF/lib目录下面。</p>
+</li>
+<li><p>多个应用共享的 Java 类文件和 jar 包，分别放在 Web 容器指定的由所有 Web 应用共享的目录下面。</p>
+</li>
+<li><p>当出现找不到类的错误时，检查当前类的类加载器和当前线程的上下文类加载器是否正确</p>
+</li>
+</ol>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>类加载方式是 Java 上非常创新的一项技术，给未来的热修复技术提供了可能。本文力求通过简单的语言和合适的例子来讲解其中双亲委托机制、自定义加载器等，并开发了自定义的NetworkClassLoader。</p>
+<p>当然，类加载是很有意思的技术，很难覆盖所有知识点，比如不同类加载器加载同一个类，得到的实例却不是同一个等等。</p>
+<h1 id="委托原则-Delegation-Principle"><a href="#委托原则-Delegation-Principle" class="headerlink" title="委托原则(Delegation Principle)"></a>委托原则(Delegation Principle)</h1><pre><code>如果一个类还没有被加载，类加载器会委托它的父亲加载器去加载它。
+</code></pre><p>这种委托会一直延续，直到到达委托层次的最顶层，由原始的类加载器加载完成该类。下图展示了这种情况。</p>
+<p>Systm-ClassPath classloader 加载了 MyApp.MyApp，而这个类创造了一个 java.util.Vector。假设现在 java.util.Vector 还没又被加载。因为 System-Classpath classloader 加载了 MyApp 类，它首先请求它的父亲 extension classloader 来加载这个类（java.util.Vector）。而 extension classloader 又请求 Bootstrap classloader 尝试加载。因为 java.util.Vector 是 J2SE 类，bootstrap classloader 成功加载了它。</p>
+<p>考虑一个当略微不同的情况，如下图。</p>
+<p>在这种情况中，MyApp 创造了一个新的用户自定义类的实例，MyClass。假设 MyClass 还没有被加载。像以往一样，当 System-Classpath classloader 接收到这个加载请求，它委托了它的父亲。最终这个委托传递到了 Bootstrap classloader。但是在 java 核心 API 里，找不到这个类。所以它的孩子加载器 Extensions classloader 尝试加载它。同样的，Extensions classloader 也没有找到它。最终，委托请求回到了 System-Classpath classloader 这里。它找到了这个类并加载成功。</p>
+<h1 id="可见性原则（Visibility-principle）"><a href="#可见性原则（Visibility-principle）" class="headerlink" title="可见性原则（Visibility principle）"></a>可见性原则（Visibility principle）</h1><pre><code>被父亲类加载器加载的类对于孩子加载器是可见的，但关系相反相反则不可见。
+</code></pre><p>这说明，一个类只能看见它自己的加载器或者这个加载器的父类加载器加载的类，反过来是不可以的。比如，被 ClassX 的父亲加载器加载的类是不能看见 ClassX 的。为了更清楚的理解，让我们来看一个例子，如下图。</p>
+<p>图中展示了四个类加载器。类加载器 A 是最顶层的加载器，B 是它的孩子。类加载器 X 和 Y 是 B 的孩子。他们各自都加载了与自己同名的类。类加载器 A 能看见 A 类，类加载器 B 能看见 A，B 类。类似的，X 能看见 A，B，X，Y 能看见 A，B，Y。但兄弟、Y 之间的类是不可见的。</p>
+<h1 id="独特性原则（Uniqueness-Principle）"><a href="#独特性原则（Uniqueness-Principle）" class="headerlink" title="独特性原则（Uniqueness Principle）"></a>独特性原则（Uniqueness Principle）</h1><pre><code>当一个类加载器加载一个类时，它的孩子加载器绝不会重新加载这个类。
+</code></pre><p>这是因为委托原则中，一个加载器总是会委托自己的父亲加载器加载类。当层次中的父亲加载器无法加载类的时候，孩子类加载器就会（或者尝试去）加载这个类。这样，类加载的独特性就得到了保障。当父亲和孩子加载器加载了同一个类，一个有趣的情况就出现了。你可能会想这怎么可能出现？这不是违反了独特性原则？</p>
+<p>我们用可见性原则中的示例图来解释这个问题。我们假设没有任何类被加载到这些类加载器的层次结构中。假设 X 类被类加载器 X 加载，它强制性的用类加载器 X 加载 B 类。这可以通过像 Class.Name()这样的 API 来实现，代码如下：</p>
+<pre><code> public class X {
+
+   public X() {
+      ClassLoader cl = this.getClass().getClassLoader();
+      Class B = Class.forName(“B”, true, cl);
+   }
+}
+</code></pre><p>在 X 的构造函数中，B 被显示的使用类加载器 X 加载。如果另一个被类加载器 B 加载的类需要访问 B 类，则无法实现，因为委托原则只能向父亲方向查询。如果类加载器 B 也加载了 B 类，当比较两个 B 类的实例时，如果一个实例来自于类加载器 X，一个来自于类加载器 B，则会抛出 ClassCastException 异常。</p>
+<p>Ref<br><a href="https://blog.csdn.net/briblue/article/details/54973413" target="_blank" rel="noopener">https://blog.csdn.net/briblue/article/details/54973413</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/08/classloader/" data-id="cjiwuy0tu0001i8l7bfyj6mti" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Classloader/">Classloader</a></li></ul>
 
     </footer>
   </div>
@@ -431,7 +989,7 @@ $docker restart name/ID
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/docker/" data-id="cji5oq3lg0000kol7e3dbeh7x" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/docker/" data-id="cjiwuy0u00003i8l7ybj3ndq4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Docker/">Docker</a></li></ul>
@@ -552,7 +1110,7 @@ $docker restart name/ID
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2018/05/08/maven/" data-id="cji5oq3p00001kol70pjtyyxc" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2018/05/08/maven/" data-id="cjiwuy0u40005i8l7bdpmq544" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Maven/">Maven</a></li></ul>
@@ -574,7 +1132,7 @@ $docker restart name/ID
   <div class="widget-wrap">
     <h3 class="widget-title">Categories</h3>
     <div class="widget">
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Maven/">Maven</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Classloader/">Classloader</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Maven/">Maven</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
     </div>
   </div>
 
@@ -584,7 +1142,7 @@ $docker restart name/ID
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Maven/">Maven</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Backpressure/">Backpressure</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Classloader/">Classloader</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Maven/">Maven</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
     </div>
   </div>
 
@@ -594,7 +1152,7 @@ $docker restart name/ID
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Maven/" style="font-size: 10px;">Maven</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
+      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Backpressure/" style="font-size: 10px;">Backpressure</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Classloader/" style="font-size: 10px;">Classloader</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Maven/" style="font-size: 10px;">Maven</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/" style="font-size: 10px;">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
     </div>
   </div>
 
@@ -603,7 +1161,7 @@ $docker restart name/ID
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
     </div>
   </div>
 
@@ -616,7 +1174,15 @@ $docker restart name/ID
       <ul>
         
           <li>
+            <a href="/2018/06/08/springDAO/">Spring Data access</a>
+          </li>
+        
+          <li>
             <a href="/2018/05/29/testsCategry/">Blue-green Deployments, A/B Testing, and Canary Releases</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/backpressure/">Backpressure</a>
           </li>
         
           <li>
@@ -625,14 +1191,6 @@ $docker restart name/ID
         
           <li>
             <a href="/2018/05/10/springCloud/">Spring Cloud</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/08/docker/">Docker</a>
-          </li>
-        
-          <li>
-            <a href="/2018/05/08/maven/">Maven</a>
           </li>
         
       </ul>

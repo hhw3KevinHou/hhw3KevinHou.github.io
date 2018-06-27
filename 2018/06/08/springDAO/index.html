@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Spring Data access | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Spring-DAOSpring-DAO is not stricto senso a spring module, but rather conventions that should dictate you to write DAO, and to write them well. As such, it does neither provide interfaces nor implemen">
+<meta name="keywords" content="Spring DAO, Spring JDBC, Spring ORM, Spring DATA">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Data access">
+<meta property="og:url" content="http://yoursite.com/2018/06/08/springDAO/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Spring-DAOSpring-DAO is not stricto senso a spring module, but rather conventions that should dictate you to write DAO, and to write them well. As such, it does neither provide interfaces nor implemen">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-06-11T07:17:32.373Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spring Data access">
+<meta name="twitter:description" content="Spring-DAOSpring-DAO is not stricto senso a spring module, but rather conventions that should dictate you to write DAO, and to write them well. As such, it does neither provide interfaces nor implemen">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-springDAO" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/06/08/springDAO/" class="article-date">
+  <time datetime="2018-06-08T04:52:08.000Z" itemprop="datePublished">2018-06-08</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Maven/">Maven</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Spring Data access
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="Spring-DAO"><a href="#Spring-DAO" class="headerlink" title="Spring-DAO"></a>Spring-DAO</h1><p>Spring-DAO is not stricto senso a spring module, but rather conventions that should dictate you to write DAO, and to write them well. As such, it does neither provide interfaces nor implementations nor templates to access your data. When writing a DAO, you should annotate them with @Repository so that exceptions linked to the underlying technology (JDBC, Hibernate, JPA, etc.) are consistently translated into the proper DataAccessException subclass.</p>
+<p>As an example, suppose you’re now using Hibernate, and your service layer catches HibernateException in order to react to it. If you change to JPA, your DAOs interfaces should not change, and the service layer will still compile with blocks that catches HibernateException, but you will never enter these blocks as your DAOs are now throwing JPA PersistenceException. By using @Repository on your DAO, the exceptions linked to the underlying technology are translated to Spring DataAccessException; your service layer catches these exceptions and if you decide to change the persistence technology, the same Spring DataAccessExceptions will still be thrown as spring have translated native exceptions.</p>
+<p>Note however that this has limited usage for the following reasons:</p>
+<ol>
+<li>Your should usually not catch persistence exceptions, as the provider may have rolled back the transaction (depending on the exact exception subtype), and thus you should not continue the execution with an alternative path.</li>
+</ol>
+<ol start="2">
+<li>The hierarchy of exceptions is usually richer in your provider than what Spring provides, and there’s no definitive mapping from one provider to the other. Relying on this is hazardous. This is however a good idea to annotate your DAOs with @Repository, as the beans will be automatically added by the scan procedure. Further, Spring may add other useful features to the annotation.</li>
+</ol>
+<h1 id="Spring-JDBC"><a href="#Spring-JDBC" class="headerlink" title="Spring-JDBC"></a>Spring-JDBC</h1><p>Spring-JDBC provides the JdbcTemplate class, that removes plumbing code and helps you concentrate on the SQL query and parameters. You just need to configure it with a DataSource, and you can then write code like this:</p>
+<pre><code>int nbRows = jdbcTemplate.queryForObject(&quot;select count(1) from person&quot;, Integer.class);
+
+Person p = jdbcTemplate.queryForObject(&quot;select first, last from person where id=?&quot;, 
+ rs -new Person(rs.getString(1), rs.getString(2)), 
+ 134561351656L);
+</code></pre><p>Spring-JDBC also provides a JdbcDaoSupport, that you can extend to develop your DAO. It basically defines 2 properties: a DataSource and a JdbcTemplate that both can be used to implement the DAO methods. It also provides an exceptions translator from SQL exceptions to spring DataAccessExceptions.</p>
+<p>If you plan to use plain jdbc, this is the module you will need to use.</p>
+<h1 id="Spring-ORM"><a href="#Spring-ORM" class="headerlink" title="Spring-ORM"></a>Spring-ORM</h1><p>Spring-ORM is an umbrella module that covers many persistence technologies, namely JPA, JDO, Hibernate and iBatis. For each of these technologies, Spring provides integration classes so that each technology can be used following Spring principles of configuration, and smoothly integrates with Spring transaction management.</p>
+<p>For each technology, the configuration basically consists in injecting a DataSource bean into some kind of SessionFactory or EntityManagerFactory etc. bean. For pure JDBC, there’s no need for such integration classes (apart from JdbcTemplate), as JDBC only relies on a DataSource.</p>
+<p>If you plan to use an ORM like JPA or Hibernate, you will not need spring-jdbc, but only this module.</p>
+<h1 id="Spring-Data"><a href="#Spring-Data" class="headerlink" title="Spring-Data"></a>Spring-Data</h1><p>Spring-Data is an umbrella project that provides a common API to define how to access data (DAO + annotations) in a more generic way, covering both SQL and NOSQL data sources.</p>
+<p>The initial idea is to provide a technology so that the developer writes the interface for a DAO (finder methods) and the entity classes in a technology-agnostic way and, based on configuration only (annotations on DAOs &amp; entities + spring configuration, be it xml- or java-based), decides the implementation technology, be it JPA (SQL) or redis, hadoop, etc. (NOSQL).</p>
+<p>If you follow the naming conventions defined by spring for the finder method names, you don’t even need to provide the query strings corresponding to finder methods for the most simple cases. For other situations, you have to provide the query string inside annotations on the finder methods.</p>
+<p>When the application context is loaded, spring provides proxies for the DAO interfaces, that contain all the boilerplate code related to the data access technology, and invokes the configured queries.</p>
+<p>Spring-Data concentrates on non-SQL technologies, but still provides a module for JPA (the only SQL technology).</p>
+<h3 id="Need-Hibernate…"><a href="#Need-Hibernate…" class="headerlink" title="Need  Hibernate…?"></a>Need  Hibernate…?</h3><p>You can use a core Spring module like Spring JDBC for directly working with MySQL (or any other RDBMS) but if you wish to use Spring Data JPA, you will need an underlying JPA implementation (since Spring Data JPA is a wrapper on top of JPA and not a JPA implementation in itself) like Hibernate or EclipseLink.</p>
+<p>The structure is as follows:</p>
+<pre><code>Spring Data JPA
+   |
+  JPA
+   |
+Hibernate
+</code></pre><p>You need Hibernate as an JPA implementation, but from your perspective you should only see Spring Data JPA.</p>
+<p>When designing your entities if you make sure that you use only annotations from the javax.persistence package you will not depend on one concrete JPA implementation (in this case Hibernate) but theoretically you could swap Hibernate for EclipseLink or something else.</p>
+<h1 id="What’s-next"><a href="#What’s-next" class="headerlink" title="What’s next"></a>What’s next</h1><p>Knowing all this, you have now to decide what to pick. The good news here is that you don’t need to make a definitive final choice for the technology. This is actually where Spring power resides : as a developer, you concentrate on the business when you write code, and if you do it well, changing the underlying technology is an implementation or configuration detail.</p>
+<ol>
+<li>Define a data model with POJO classes for the entities, and get/set methods to represent the entity attributes and the relationships to other entities. You will certainly need to annotate the entity classes and fields based on the technology, but for now, POJOs are enough to start with. Just concentrate on the business requirements for now.</li>
+</ol>
+<ol start="2">
+<li>Define interfaces for your DAOs. 1 DAO covers exactly 1 entity, but you will certainly not need a DAO for each of them, as you should be able to load additional entities by navigating the relationships. Define the finder methods following strict naming conventions.</li>
+</ol>
+<ol start="3">
+<li>Based on this, someone else can start working on the services layer, with mocks for your DAOs.</li>
+</ol>
+<ol start="4">
+<li>You learn the different persistence technologies (sql, no-sql) to find the best fit for your needs, and choose one of them. Based on this, you annotate the entities and implement the DAOs (or let spring implement them for you if you choose to use spring-data).</li>
+</ol>
+<ol start="5">
+<li>If the business requirements evolve and your data access technology is not sufficient to support it (say, you started with JDBC and a few entities, but now need a richer data model and JPA is a better choice), you will have to change the implementation of your DAOs, add a few annotations on your entities and change the spring configuration (add an EntityManagerFactory definition). The rest of your business code should not see other impacts from your change.</li>
+</ol>
+<h1 id="Note-Transaction-Management"><a href="#Note-Transaction-Management" class="headerlink" title="Note : Transaction Management"></a>Note : Transaction Management</h1><p>Spring provides an API for transaction management. If you plan to use spring for the data access, you should also use spring for transaction management, as they integrate together really well. For each data access technology supported by spring, there is a matching transaction manager for local transactions, or you can choose JTA if you need distributed transactions. All of them implement the same API, so that (once again) the technology choice is just a matter a configuration that can be changed without further impact on the business code.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/06/08/springDAO/" data-id="cjiwuy0u60006i8l7xovknh8m" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2018/05/29/testsCategry/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Blue-green Deployments, A/B Testing, and Canary Releases</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Classloader/">Classloader</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Maven/">Maven</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Backpressure/">Backpressure</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Classloader/">Classloader</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Maven/">Maven</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Backpressure/" style="font-size: 10px;">Backpressure</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Classloader/" style="font-size: 10px;">Classloader</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Maven/" style="font-size: 10px;">Maven</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/" style="font-size: 10px;">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/06/08/springDAO/">Spring Data access</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/29/testsCategry/">Blue-green Deployments, A/B Testing, and Canary Releases</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/backpressure/">Backpressure</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/transactions/">可靠消息最终一致性</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/10/springCloud/">Spring Cloud</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

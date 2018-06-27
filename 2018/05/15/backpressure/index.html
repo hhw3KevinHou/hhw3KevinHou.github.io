@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>Backpressure | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言背压（Backpressure）可能是所有想要深入运用RxJava的朋友必须理解的一个概念。关于它的介绍，我本意是想写在RxJava2.0更新介绍的文章里的，可是写着写着发现，要完整介绍这个概念需要花费的篇幅太长，恰好目前对于背压的介绍文章比较少，所以决定单独拿出来，自成一篇。而关于RxJava2.0的文章修改之后就会发出来和大家探讨。如果对于RxJava不是很熟悉，那么在这篇文章之前，我希望">
+<meta name="keywords" content="Backpressure">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Backpressure">
+<meta property="og:url" content="http://yoursite.com/2018/05/15/backpressure/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="前言背压（Backpressure）可能是所有想要深入运用RxJava的朋友必须理解的一个概念。关于它的介绍，我本意是想写在RxJava2.0更新介绍的文章里的，可是写着写着发现，要完整介绍这个概念需要花费的篇幅太长，恰好目前对于背压的介绍文章比较少，所以决定单独拿出来，自成一篇。而关于RxJava2.0的文章修改之后就会发出来和大家探讨。如果对于RxJava不是很熟悉，那么在这篇文章之前，我希望">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://yoursite.com/2018/05/15/backpressure/1627a7f426088d78.png">
+<meta property="og:updated_time" content="2018-06-27T08:25:17.123Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Backpressure">
+<meta name="twitter:description" content="前言背压（Backpressure）可能是所有想要深入运用RxJava的朋友必须理解的一个概念。关于它的介绍，我本意是想写在RxJava2.0更新介绍的文章里的，可是写着写着发现，要完整介绍这个概念需要花费的篇幅太长，恰好目前对于背压的介绍文章比较少，所以决定单独拿出来，自成一篇。而关于RxJava2.0的文章修改之后就会发出来和大家探讨。如果对于RxJava不是很熟悉，那么在这篇文章之前，我希望">
+<meta name="twitter:image" content="http://yoursite.com/2018/05/15/backpressure/1627a7f426088d78.png">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-backpressure" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2018/05/15/backpressure/" class="article-date">
+  <time datetime="2018-05-15T06:26:09.000Z" itemprop="datePublished">2018-05-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Backpressure
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>背压（Backpressure）可能是所有想要深入运用RxJava的朋友必须理解的一个概念。<br>关于它的介绍，我本意是想写在RxJava2.0更新介绍的文章里的，可是写着写着发现，要完整介绍这个概念需要花费的篇幅太长，恰好目前对于背压的介绍文章比较少，所以决定单独拿出来，自成一篇。而关于RxJava2.0的文章修改之后就会发出来和大家探讨。<br>如果对于RxJava不是很熟悉，那么在这篇文章之前，我希望大家先看看那篇关于Rxjava最友好的文章，可以帮助大家很顺畅的了解RxJava。</p>
+<h1 id="从场景出发"><a href="#从场景出发" class="headerlink" title="从场景出发"></a>从场景出发</h1><p>让我们先忘掉背压（Backpressure）这个概念，从RxJava一个比较常见的工作场景说起。<br>RxJava是一个观察者模式的架构，当这个架构中被观察者(Observable)和观察者(Subscriber)处在不同的线程环境中时，由于者各自的工作量不一样，导致它们产生事件和处理事件的速度不一样，这就会出现两种情况：</p>
+<p>被观察者产生事件慢一些，观察者处理事件很快。那么观察者就会等着被观察者发送事件，（好比观察者在等米下锅，程序等待，这没有问题）。关于背压（Backpressure）<br>被观察者产生事件的速度很快，而观察者处理很慢。那就出问题了，如果不作处理的话，事件会堆积起来，最终挤爆你的内存，导致程序崩溃。（好比被观察者生产的大米没人吃，堆积最后就会烂掉）。</p>
+<p>下面我们用代码演示一下这种崩溃的场景：</p>
+<pre><code>//被观察者在主线程中，每1ms发送一个事件
+Observable.interval(1, TimeUnit.MILLISECONDS)
+            //.subscribeOn(Schedulers.newThread())
+            //将观察者的工作放在新线程环境中
+            .observeOn(Schedulers.newThread())
+            //观察者处理每1000ms才处理一个事件
+            .subscribe(new Action1&lt;Long&gt;() {
+                  @Override
+                  public void call(Long aLong) {
+                      try {
+                          Thread.sleep(1000);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                  }
+              });
+</code></pre><p>在上面的代码中，被观察者发送事件的速度是观察者处理速度的1000倍<br>这段代码运行之后：</p>
+<pre><code>...
+Caused by: rx.exceptions.MissingBackpressureException
+...
+...
+</code></pre><p>抛出MissingBackpressureException往往就是因为，被观察者发送事件的速度太快，而观察者处理太慢，而且你还没有做相应措施，所以报异常。<br>而这个MissingBackpressureException异常里面就包含了Backpressure这个单词，看来背压肯定和这种异常情况有关系。<br>那么背压（Backpressure）到底是什么呢？</p>
+<h1 id="关于背压（Backpressure）"><a href="#关于背压（Backpressure）" class="headerlink" title="关于背压（Backpressure）"></a>关于背压（Backpressure）</h1><p>我这两天翻阅了大量的中文和英文资料，我发现中文资料中，很多人对于背压（Backpressure）的理解是有很大问题的，有的人把它看作一个需要避免的问题，或者程序的异常，有的人则干脆避而不谈，模棱两可，着实让人尴尬。<br>通过参考和对比大量的相关资料，我在这里先对背压（Backpressure）做一个明确的定义：背压是指在异步场景中，被观察者发送事件速度远快于观察者的处理速度的情况下，一种告诉上游的被观察者降低发送速度的策略<br>简而言之，背压是流速控制的一种策略。<br>需要强调两点：</p>
+<p>背压策略的一个前提是异步环境，也就是说，被观察者和观察者处在不同的线程环境中。<br>背压（Backpressure）并不是一个像flatMap一样可以在程序中直接使用的操作符，他只是一种控制事件流速的策略。</p>
+<p>那么我们再回看上面的程序异常就很好理解了，就是当被观察者发送事件速度过快的情况下，我们没有做流速控制，导致了异常。<br>那么背压（Backpressure）策略具体是哪如何实现流速控制的呢？</p>
+<h1 id="响应式拉取（reactive-pull）"><a href="#响应式拉取（reactive-pull）" class="headerlink" title="响应式拉取（reactive pull）"></a>响应式拉取（reactive pull）</h1><p>首先我们回忆之前那篇关于Rxjava最友好的文章，里面其实提到，在RxJava的观察者模型中，被观察者是主动的推送数据给观察者，观察者是被动接收的。而响应式拉取则反过来，观察者主动从被观察者那里去拉取数据，而被观察者变成被动的等待通知再发送数据。<br>结构示意图如下：<br><img src="/2018/05/15/backpressure/1627a7f426088d78.png" alt=""><br>观察者可以根据自身实际情况按需拉取数据，而不是被动接收（也就相当于告诉上游观察者把速度慢下来），最终实现了上游被观察者发送事件的速度的控制，实现了背压的策略。<br>代码实例如下：</p>
+<pre><code>//被观察者将产生100000个事件
+Observable observable=Observable.range(1,100000);
+class MySubscriber extends Subscriber&lt;T&gt; {
+    @Override
+    public void onStart() {
+    //一定要在onStart中通知被观察者先发送一个事件
+      request(1);
+    }
+
+    @Override
+    public void onCompleted() {
+        ...
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        ...
+    }
+
+    @Override
+    public void onNext(T n) {
+        ...
+        ...
+        //处理完毕之后，在通知被观察者发送下一个事件
+        request(1);
+    }
+}
+
+observable.observeOn(Schedulers.newThread())
+        .subscribe(MySubscriber);
+</code></pre><p>在代码中，传递事件开始前的onstart()中，调用了request(1)，通知被观察者先发送一个事件，然后在onNext()中处理完事件，再次调用request(1)，通知被观察者发送下一个事件….</p>
+<p>注意在onNext()方法中，最好最后再调用request()方法.</p>
+<p>如果你想取消这种backpressure 策略，调用quest(Long.MAX_VALUE)即可。<br>实际上，在上面的代码中，你也可以不需要调用request(n)方法去拉取数据，程序依然能完美运行，这是因为range –&gt; observeOn,这一段中间过程本身就是响应式拉取数据，observeOn这个操作符内部有一个缓冲区，Android环境下长度是16，它会告诉range最多发送16个事件，充满缓冲区即可。不过话说回来，在观察者中使用request(n)这个方法可以使背压的策略表现得更加直观，更便于理解。<br>如果你足够细心，会发现，在开头展示异常情况的代码中，使用的是interval这个操作符，但是在这里使用了range操作符，为什么呢？<br>这是因为interval操作符本身并不支持背压策略，它并不响应request(n)，也就是说，它发送事件的速度是不受控制的，而range这类操作符是支持背压的，它发送事件的速度可以被控制。<br>那么到底什么样的Observable是支持背压的呢？</p>
+<h1 id="Hot-and-Cold-Observables"><a href="#Hot-and-Cold-Observables" class="headerlink" title="Hot and Cold Observables"></a>Hot and Cold Observables</h1><p>需要说明的时，Hot Observables 和cold Observables并不是严格的概念区分，它只是对于两类Observable形象的描述</p>
+<p>Cold Observables：指的是那些在订阅之后才开始发送事件的Observable（每个Subscriber都能接收到完整的事件）。<br>Hot Observables:指的是那些在创建了Observable之后，（不管是否订阅）就开始发送事件的Observable</p>
+<p>其实也有创建了Observable之后调用诸如publish()方法就可以开始发送事件的,这里咱们暂且忽略。</p>
+<p>我们一般使用的都是Cold Observable，除非特殊需求，才会使用Hot Observable,在这里，Hot Observable这一类是不支持背压的，而是Cold Observable这一类中也有一部分并不支持背压（比如interval，timer等操作符创建的Observable）。<br>懵逼了吧？</p>
+<p>Tips: 都是Observable，结果有的支持背压，有的不支持，这就是RxJava1.X的一个问题。在2.0中，这种问题已经解决了，以后谈到2.0时再细说。</p>
+<p>在那些不支持背压策略的操作符中使用响应式拉取数据的话，还是会抛出MissingBackpressureException。<br>那么，不支持背压的Observevable如何做流速控制呢？</p>
+<h1 id="流速控制相关的操作符"><a href="#流速控制相关的操作符" class="headerlink" title="流速控制相关的操作符"></a>流速控制相关的操作符</h1><h2 id="过滤（抛弃）"><a href="#过滤（抛弃）" class="headerlink" title="过滤（抛弃）"></a>过滤（抛弃）</h2><p>就是虽然生产者产生事件的速度很快，但是把大部分的事件都直接过滤（浪费）掉，从而间接的降低事件发送的速度。<br>相关类似的操作符：Sample，ThrottleFirst….<br>以sample为例，</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+            .observeOn(Schedulers.newThread())
+            //这个操作符简单理解就是每隔200ms发送里时间点最近那个事件，
+            //其他的事件浪费掉
+              .sample(200,TimeUnit.MILLISECONDS)
+              .subscribe(new Action1&lt;Long&gt;() {
+                  @Override
+                  public void call(Long aLong) {
+                      try {
+                          Thread.sleep(200);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                  }
+              });
+</code></pre><p>这是以杀敌一千，自损八百的方式解决这个问题，因为抛弃了绝大部分的事件，而在我们使用RxJava 时候，我们自己定义的Observable产生的事件可能都是我们需要的，一般来说不会抛弃，所以这种方案有它的缺陷。</p>
+<h2 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h2><p>就是虽然被观察者发送事件速度很快，观察者处理不过来，但是可以选择先缓存一部分，然后慢慢读。<br>相关类似的操作符：buffer，window…<br>以buffer为例，</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+
+            .observeOn(Schedulers.newThread())
+            //这个操作符简单理解就是把100毫秒内的事件打包成list发送
+            .buffer(100,TimeUnit.MILLISECONDS)
+              .subscribe(new Action1&lt;List&lt;Long&gt;&gt;() {
+                  @Override
+                  public void call(List&lt;Long&gt; aLong) {
+                      try {
+                          Thread.sleep(1000);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong.size());
+                  }
+              });
+</code></pre><h2 id="两个特殊操作符"><a href="#两个特殊操作符" class="headerlink" title="两个特殊操作符"></a>两个特殊操作符</h2><p>对于不支持背压的Observable除了使用上述两类生硬的操作符之外，还有更好的选择：onBackpressurebuffer，onBackpressureDrop。</p>
+<p>onBackpressurebuffer：把observable发送出来的事件做缓存，当request方法被调用的时候，给下层流发送一个item(如果给这个缓存区设置了大小，那么超过了这个大小就会抛出异常)。<br>onBackpressureDrop：将observable发送的事件抛弃掉，直到subscriber再次调用request（n）方法的时候，就发送给它这之后的n个事件。</p>
+<p>下面，我们以onBackpressureDrop为例说说用法：</p>
+<pre><code>Observable.interval(1, TimeUnit.MILLISECONDS)
+            .onBackpressureDrop()
+            .observeOn(Schedulers.newThread())
+           .subscribe(new Subscriber&lt;Long&gt;() {
+
+                @Override
+                public void onStart() {
+                    Log.w(&quot;TAG&quot;,&quot;start&quot;);
+                    request(1);
+                }
+
+                @Override
+                  public void onCompleted() {
+
+                  }
+                  @Override
+                  public void onError(Throwable e) {
+                        Log.e(&quot;ERROR&quot;,e.toString());
+                  }
+
+                  @Override
+                  public void onNext(Long aLong) {
+                      Log.w(&quot;TAG&quot;,&quot;----&gt;&quot;+aLong);
+                      try {
+                          Thread.sleep(100);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                  }
+              });
+</code></pre><p>这段代码的输出：</p>
+<pre><code>W/TAG: start
+W/TAG: ----&gt;0
+W/TAG: ----&gt;1
+W/TAG: ----&gt;2
+W/TAG: ----&gt;3
+W/TAG: ----&gt;4
+W/TAG: ----&gt;5
+W/TAG: ----&gt;6
+W/TAG: ----&gt;7
+W/TAG: ----&gt;8
+W/TAG: ----&gt;9
+W/TAG: ----&gt;10
+W/TAG: ----&gt;11
+W/TAG: ----&gt;12
+W/TAG: ----&gt;13
+W/TAG: ----&gt;14
+W/TAG: ----&gt;15
+W/TAG: ----&gt;1218
+W/TAG: ----&gt;1219
+W/TAG: ----&gt;1220
+...
+</code></pre><p>之所以出现0-15这样连贯的数据，就是是因为observeOn操作符内部有一个长度为16的缓存区，它会首先请求16个事件缓存起来….<br>你可能会觉得这两个操作符和上面讲的过滤和缓存很类似，确实，功能上是有些类似，但是这两个操作符提供了更多的特性，那就是可以响应下游观察者的request(n)方法了，也就是说，使用了这两种操作符，可以让原本不支持背压的Observable“支持”背压了。</p>
+<h1 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h1><p>背压是一种策略，具体措施是下游观察者通知上游的被观察者发送事件<br>背压策略很好的解决了异步环境下被观察者和观察者速度不一致的问题<br>在RxJava1.X中，同样是Observable，有的不支持背压策略，导致某些情况下，显得特别麻烦，出了问题也很难排查，使得RxJava的学习曲线变得十份陡峭。</p>
+<p>这篇文章并不是为了让你学习在RxJava1.0中使用背压（如果你之前不了解背压的话），因为在1.0中，背压的设计并不十分完美。而是希望你对背压有一个全面清晰的认识，对于它在RxJava1.0中的设计缺陷有所了解即可。</p>
+<p>链接：<a href="https://juejin.im/post/582d413c8ac24700619cceed" target="_blank" rel="noopener">https://juejin.im/post/582d413c8ac24700619cceed</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2018/05/15/backpressure/" data-id="cjiwuy0t60000i8l71rqohguv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Backpressure/">Backpressure</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2018/05/29/testsCategry/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Blue-green Deployments, A/B Testing, and Canary Releases
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2018/05/15/transactions/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">可靠消息最终一致性</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Classloader/">Classloader</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Docker/">Docker</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Maven/">Maven</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a></li><li class="category-list-item"><a class="category-list-link" href="/categories/test/">test</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/A-B-Testing/">A/B Testing</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Backpressure/">Backpressure</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Blue-green-Deployments/">Blue-green Deployments</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Canary-Releases/">Canary Releases</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Classloader/">Classloader</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Docker/">Docker</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Maven/">Maven</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-Cloud/">Spring Cloud</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/事务/">事务</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/A-B-Testing/" style="font-size: 10px;">A/B Testing</a> <a href="/tags/Backpressure/" style="font-size: 10px;">Backpressure</a> <a href="/tags/Blue-green-Deployments/" style="font-size: 10px;">Blue-green Deployments</a> <a href="/tags/Canary-Releases/" style="font-size: 10px;">Canary Releases</a> <a href="/tags/Classloader/" style="font-size: 10px;">Classloader</a> <a href="/tags/Docker/" style="font-size: 10px;">Docker</a> <a href="/tags/Maven/" style="font-size: 10px;">Maven</a> <a href="/tags/Spring-Cloud/" style="font-size: 10px;">Spring Cloud</a> <a href="/tags/Spring-DAO-Spring-JDBC-Spring-ORM-Spring-DATA/" style="font-size: 10px;">Spring DAO, Spring JDBC, Spring ORM, Spring DATA</a> <a href="/tags/事务/" style="font-size: 10px;">事务</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2018/06/08/springDAO/">Spring Data access</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/29/testsCategry/">Blue-green Deployments, A/B Testing, and Canary Releases</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/backpressure/">Backpressure</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/15/transactions/">可靠消息最终一致性</a>
+          </li>
+        
+          <li>
+            <a href="/2018/05/10/springCloud/">Spring Cloud</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
